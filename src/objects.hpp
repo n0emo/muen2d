@@ -4,6 +4,6 @@
 
 namespace objects {
 
-void define(mujs::Js& js, const char *root_path);
+void define(mujs::Js& js);
 
 }

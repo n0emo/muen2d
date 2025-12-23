@@ -35,6 +35,10 @@ void Js::dump_error() {
     ::js_pop(this->j, 1);
 }
 
+void Js::set_context(void *context) {
+    ::js_setcontext(this->j, context);
+}
+
 void Js::pop(int n) {
     ::js_pop(this->j, n);
 }

@@ -13,7 +13,7 @@ Config read_config(Engine& self);
 
 Engine engine() {
     auto js = mujs::Js::create();
-    return Engine {.js = js};
+    return Engine {.js = js, .context = Context {}};
 }
 
 void destroy(Engine& self) {
@@ -21,7 +21,9 @@ void destroy(Engine& self) {
 }
 
 int run(Engine& self, const char *path) {
-    objects::define(self.js, path);
+    self.context.root_path = path;
+    self.js.set_context(static_cast<void *>(&self.context));
+    objects::define(self.js);
 
     auto game_path = std::string {path};
     if (game_path[game_path.size() - 1] != '/') {

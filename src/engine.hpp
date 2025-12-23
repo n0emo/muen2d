@@ -11,8 +11,13 @@ struct Config {
     const char *title = "muen2d";
 };
 
+struct Context {
+    const char *root_path;
+};
+
 struct Engine {
     mujs::Js js;
+    Context context;
 };
 
 Engine engine();

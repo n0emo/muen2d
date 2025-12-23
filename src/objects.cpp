@@ -9,6 +9,7 @@
 #include <spdlog/spdlog.h>
 
 #include "jsutil.h"
+#include "engine.hpp"
 
 enum class LogLevel { Trace, Debug, Info, Warn, Error };
 
@@ -35,14 +36,7 @@ Color js_tocolor(js_State *j, int idx);
 
 namespace objects {
 
-struct Context {
-    const char *root_path;
-};
-
-void define(mujs::Js& js, const char *root_path) {
-    auto context = new Context {.root_path = root_path};
-    js_setcontext(js.j, static_cast<void *>(context));
-
+void define(mujs::Js& js) {
     js.object("console")
         .define_method(muen_log_trace, "trace", 0, mujs::READONLY)
         .define_method(muen_log_debug, "debug", 0, mujs::READONLY)
@@ -134,7 +128,7 @@ void muen_log_error(js_State *j) {
 void muen_fs_read(js_State *j) {
     const char *file_path = ::js_tostring(j, 1);
 
-    objects::Context *ctx = static_cast<objects::Context *>(::js_getcontext(j));
+    engine::Context *ctx = static_cast<engine::Context *>(::js_getcontext(j));
     auto path = std::string {ctx->root_path};
     if (path[path.size() - 1] != '/') {
         path.push_back('/');
@@ -157,7 +151,7 @@ void muen_fs_read(js_State *j) {
 void muen_fs_load(js_State *j) {
     const char *file_path = ::js_tostring(j, 1);
 
-    objects::Context *ctx = static_cast<objects::Context *>(::js_getcontext(j));
+    engine::Context *ctx = static_cast<engine::Context *>(::js_getcontext(j));
     auto path = std::string {ctx->root_path};
     if (path[path.size() - 1] != '/') {
         path.push_back('/');

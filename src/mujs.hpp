@@ -24,6 +24,7 @@ struct Js {
     ObjectBuilder object(const char *prototype);
 
     void dump_error();
+    void set_context(void *context);
 
     void pop(int n);
 
