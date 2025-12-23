@@ -43,7 +43,7 @@ int run(Engine& self, const char *path) {
             .width = config.width,
             .height = config.height,
             .fps = config.fps,
-            .title = "muen",
+            .title = config.title,
         }
     );
     defer(window::close(w));
@@ -75,6 +75,9 @@ Config read_config(Engine& self) {
         }
         if (auto height = config_obj->get_integer("height")) {
             config.height = *height;
+        }
+        if (auto title = config_obj->get_string("title")) {
+            config.title = *title;
         }
         config_obj->drop();
     }

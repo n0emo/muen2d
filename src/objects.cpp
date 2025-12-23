@@ -164,6 +164,7 @@ void muen_screen_height(js_State *j) {
 void muen_graphics_clear(js_State *j) {
     Color c = js_getcolor(j, 1);
     ClearBackground(c);
+    js_pushundefined(j);
 }
 
 void muen_graphics_circle(js_State *j) {

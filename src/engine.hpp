@@ -8,6 +8,7 @@ struct Config {
     int width = 800;
     int height = 600;
     int fps = 60;
+    const char *title = "muen2d";
 };
 
 struct Engine {
