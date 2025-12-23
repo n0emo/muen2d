@@ -30,6 +30,7 @@ struct Js {
     void eval_file(const char *path);
     void extracted();
     void eval_string(const char *str);
+    void eval_string(const char *str, const char *filename);
 
     ObjectRef get_global_object(const char *name);
 };

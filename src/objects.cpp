@@ -1,10 +1,14 @@
 #include "objects.hpp"
 
+#include <cstring>
 #include <sstream>
+#include <fstream>
 
 #include <mujs.h>
 #include <raylib.h>
 #include <spdlog/spdlog.h>
+
+#include "jsutil.h"
 
 enum class LogLevel { Trace, Debug, Info, Warn, Error };
 
@@ -15,6 +19,9 @@ void muen_log_debug(js_State *j);
 void muen_log_info(js_State *j);
 void muen_log_warn(js_State *j);
 void muen_log_error(js_State *j);
+
+void muen_fs_read(js_State *j);
+void muen_fs_load(js_State *j);
 
 void muen_screen_dt(js_State *j);
 void muen_screen_width(js_State *j);
@@ -28,7 +35,14 @@ Color js_tocolor(js_State *j, int idx);
 
 namespace objects {
 
-void define(mujs::Js& js) {
+struct Context {
+    const char *root_path;
+};
+
+void define(mujs::Js& js, const char *root_path) {
+    auto context = new Context {.root_path = root_path};
+    js_setcontext(js.j, static_cast<void *>(context));
+
     js.object("console")
         .define_method(muen_log_trace, "trace", 0, mujs::READONLY)
         .define_method(muen_log_debug, "debug", 0, mujs::READONLY)
@@ -36,6 +50,11 @@ void define(mujs::Js& js) {
         .define_method(muen_log_warn, "warn", 0, mujs::READONLY)
         .define_method(muen_log_error, "error", 0, mujs::READONLY)
         .set_global("console");
+
+    js.object("fs")
+        .define_method(muen_fs_read, "read", 1, mujs::READONLY)
+        .define_method(muen_fs_load, "load", 1, mujs::READONLY)
+        .set_global("fs");
 
     js.object("screen")
         .define_accessor(muen_screen_dt, nullptr, "dt", mujs::READONLY)
@@ -49,46 +68,12 @@ void define(mujs::Js& js) {
         .set_global("graphics");
 
     js.eval_string(
-        R"(
-        function Color() {
-
-            function parse_byte(s, i) {
-                return parseInt(s.slice(i, i + 2), 16);
-            }
-
-            function assertByte(n) {
-                if ((n | 0) !== n) {
-                    throw TypeError("Color byte must be integer");
-                }
-
-                if (n < 0 || n >= 256) {
-                    throw TypeError("Color byte must be in range [0; 255]");
-                }
-
-                return n;
-            }
-
-            if (arguments.length == 1) {
-                var str = arguments[0];
-                if (typeof str !== 'string' || (str.length != 7 && str.length != 9) || str[0] != '#') {
-                    throw TypeError("Invalid arguments for Color");
-                }
-
-                this.r = parse_byte(str, 1);
-                this.g = parse_byte(str, 3);
-                this.b = parse_byte(str, 5);
-                this.a = str.length == 9 ? parse_byte(str, 7) : 255;
-            } else if (arguments.length == 3 || arguments.length == 4) {
-                this.r = assertByte(arguments[0]);
-                this.g = assertByte(arguments[1]);
-                this.b = assertByte(arguments[2]);
-                this.a = arguments.length == 4 ? assertByte(arguments[3]) : 255;
-            } else {
-                throw TypeError("Invalid arguments for Color");
-            }
-        }
-    )"
+        (char[]){
+#include "muen.js.h"
+        },
+        "muen.js"
     );
+    js.pop(1);
 }
 
 } // namespace objects
@@ -144,6 +129,57 @@ void muen_log_warn(js_State *j) {
 
 void muen_log_error(js_State *j) {
     muen_log(j, LogLevel::Error);
+}
+
+void muen_fs_read(js_State *j) {
+    const char *file_path = ::js_tostring(j, 1);
+
+    objects::Context *ctx = static_cast<objects::Context *>(::js_getcontext(j));
+    auto path = std::string {ctx->root_path};
+    if (path[path.size() - 1] != '/') {
+        path.push_back('/');
+    }
+    path.append(file_path);
+    spdlog::info("{}", path);
+
+    try {
+        auto file = std::ifstream {path};
+        file.exceptions(file.failbit | file.badbit);
+        auto buf = std::stringstream {};
+        buf << file.rdbuf();
+        auto str = buf.str();
+        ::js_pushstring(j, str.c_str());
+    } catch (std::exception& e) {
+        ::js_error(j, "Could not read %s: %s", file_path, strerror(errno));
+    }
+}
+
+void muen_fs_load(js_State *j) {
+    const char *file_path = ::js_tostring(j, 1);
+
+    objects::Context *ctx = static_cast<objects::Context *>(::js_getcontext(j));
+    auto path = std::string {ctx->root_path};
+    if (path[path.size() - 1] != '/') {
+        path.push_back('/');
+    }
+    path.append(file_path);
+    spdlog::trace("Loading {}", path);
+
+    try {
+        auto file = std::ifstream {path};
+        file.exceptions(file.failbit | file.badbit);
+        auto buf = std::stringstream {};
+        buf << file.rdbuf();
+        auto str = buf.str();
+        ::js_pop(j, 2);
+        ::js_pushnull(j);
+        ::js_pushstring(j, "module");
+        ::js_pushstring(j, str.c_str());
+        ::js_create_function(j, path.c_str());
+
+    } catch (std::exception& e) {
+        ::js_error(j, "Could not read %s: %s", file_path, strerror(errno));
+    }
 }
 
 void muen_screen_dt(js_State *j) {

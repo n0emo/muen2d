@@ -1,5 +1,5 @@
 configure:
-    xmake config --mode=denug
+    xmake config --mode=debug
     xmake project -k compile_commands
 
 build:

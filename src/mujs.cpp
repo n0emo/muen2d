@@ -49,8 +49,15 @@ void Js::eval_file(const char *path) {
 
 void Js::eval_string(const char *str) {
     mujs_try(*this);
-    ::js_pushliteral(this->j, str);
+    ::js_pushstring(this->j, str);
     ::js_eval(this->j);
+}
+
+void Js::eval_string(const char *str, const char *filename) {
+    mujs_try(*this);
+    ::js_loadstring(this->j, filename, str);
+    ::js_pushundefined(this->j);
+    ::js_call(this->j, 0);
 }
 
 ObjectRef Js::get_global_object(const char *name) {

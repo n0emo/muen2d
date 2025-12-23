@@ -9,7 +9,7 @@ void js_dump(js_State *j) {
     js_dumpstack(j);
 }
 
-static void js_dumpstack(js_State *J) {
+void js_dumpstack(js_State *J) {
     int i;
     printf("stack {\n");
     for (i = 0; i < J->top; ++i) {
@@ -19,6 +19,43 @@ static void js_dumpstack(js_State *J) {
         putchar('\n');
     }
     printf("}\n");
+}
+
+void js_create_function(js_State *J, const char *source) {
+    int i, top = js_gettop(J);
+    js_Buffer *sb = NULL;
+    const char *body;
+    js_Ast *parse;
+    js_Function *fun;
+
+    if (js_try(J)) {
+        js_free(J, sb);
+        jsP_freeparse(J);
+        js_throw(J);
+    }
+
+    /* p1, p2, ..., pn */
+    if (top > 2) {
+        for (i = 1; i < top - 1; ++i) {
+            if (i > 1)
+                js_putc(J, &sb, ',');
+            js_puts(J, &sb, js_tostring(J, i));
+        }
+        js_putc(J, &sb, ')');
+        js_putc(J, &sb, 0);
+    }
+
+    /* body */
+    body = js_isdefined(J, top - 1) ? js_tostring(J, top - 1) : "";
+
+    parse = jsP_parsefunction(J, source, sb ? sb->s : NULL, body);
+    fun = jsC_compilefunction(J, parse);
+
+    js_endtry(J);
+    js_free(J, sb);
+    jsP_freeparse(J);
+
+    js_newfunction(J, fun, J->E);
 }
 
 static void js_dumpvalue(js_State *J, js_Value v) {

@@ -13,8 +13,6 @@ Config read_config(Engine& self);
 
 Engine engine() {
     auto js = mujs::Js::create();
-    objects::define(js);
-
     return Engine {.js = js};
 }
 
@@ -23,11 +21,13 @@ void destroy(Engine& self) {
 }
 
 int run(Engine& self, const char *path) {
+    objects::define(self.js, path);
+
     auto game_path = std::string {path};
     if (game_path[game_path.size() - 1] != '/') {
         game_path += '/';
     }
-    game_path += "game.js";
+    game_path += "Game.js";
 
     try {
         self.js.eval_file(game_path.c_str());
