@@ -157,13 +157,18 @@ std::optional<ObjectRef> ObjectRef::get_object(const char *name) {
 }
 
 Exception::Exception(Js& js) {
-    auto stack_cstr = ::js_tostring(js.j, -1);
+    ::js_getproperty(js.j, -1, "stack");
+    auto stack = ::js_tostring(js.j, -1);
     ::js_pop(js.j, 1);
-    this->stack = std::string {stack_cstr};
+
+    auto desc = ::js_tostring(js.j, -1);
+    ::js_pop(js.j, 1);
+
+    this->message = std::format("{}\nStack trace:{}", desc, stack);
 }
 
 const char *Exception::what() const noexcept {
-    return this->stack.c_str();
+    return this->message.c_str();
 }
 
 } // namespace mujs

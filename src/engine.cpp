@@ -62,6 +62,7 @@ int run(Engine& self, const char *path) {
         }
     } catch (mujs::Exception& e) {
         spdlog::error("Error running game: {}", e.what());
+        printf("\n");
         ::js_dump(self.js.j);
         return 1;
     }

@@ -58,7 +58,7 @@ struct ObjectRef {
 };
 
 struct Exception: public std::exception {
-    std::string stack;
+    std::string message;
 
     Exception(Js&);
     const char *what() const noexcept override;
