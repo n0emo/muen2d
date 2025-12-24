@@ -7,7 +7,6 @@
 #include <mujs.h>
 #include <raylib.h>
 #include <spdlog/spdlog.h>
-#include <unistd.h>
 
 #include "jsutil.h"
 #include "engine.hpp"
