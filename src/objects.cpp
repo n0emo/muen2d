@@ -7,6 +7,7 @@
 #include <mujs.h>
 #include <raylib.h>
 #include <spdlog/spdlog.h>
+#include <unistd.h>
 
 #include "jsutil.h"
 #include "engine.hpp"
@@ -14,7 +15,6 @@
 enum class LogLevel { Trace, Debug, Info, Warn, Error };
 
 extern "C" {
-
 void muen_log_trace(js_State *j);
 void muen_log_debug(js_State *j);
 void muen_log_info(js_State *j);
@@ -30,9 +30,12 @@ void muen_screen_height(js_State *j);
 
 void muen_graphics_clear(js_State *j);
 void muen_graphics_circle(js_State *j);
+void muen_graphics_rectangle(js_State *j);
 }
 
 Color js_tocolor(js_State *j, int idx);
+Vector2 js_tovector2(js_State *j, int idx);
+Rectangle js_torectangle(js_State *j, int idx);
 
 namespace objects {
 
@@ -59,6 +62,7 @@ void define(mujs::Js& js) {
     js.object("graphics")
         .define_method(muen_graphics_clear, "clear", 1, mujs::READONLY)
         .define_method(muen_graphics_circle, "circle", 4, mujs::READONLY)
+        .define_method(muen_graphics_rectangle, "rectangle", 0, mujs::READONLY)
         .set_global("graphics");
 
     js.eval_string(
@@ -206,24 +210,99 @@ void muen_graphics_circle(js_State *j) {
     js_pushundefined(j);
 }
 
+void muen_graphics_rectangle(js_State *j) {
+    Rectangle rec {};
+    Vector2 origin {};
+    float rotation {};
+    Color color {};
+
+    int top = js_gettop(j);
+
+    if (top == 6) { // DrawRectangle
+        rec.x = js_tointeger(j, 1);
+        rec.y = js_tointeger(j, 2);
+        rec.width = js_tointeger(j, 3);
+        rec.height = js_tointeger(j, 4);
+        color = js_tocolor(j, 5);
+    } else if (top == 4) { // DrawRectangleV
+        Vector2 position = js_tovector2(j, 1);
+        Vector2 size = js_tovector2(j, 2);
+        color = js_tocolor(j, 3);
+        rec.x = position.x;
+        rec.y = position.y;
+        rec.width = size.x;
+        rec.height = size.y;
+    } else if (top == 3) { // DrawRectangleRec
+        rec = js_torectangle(j, 1);
+        color = js_tocolor(j, 2);
+    } else if (top == 5) { // DrawRectanglePro
+        rec = js_torectangle(j, 1);
+        origin = js_tovector2(j, 2);
+        rotation = static_cast<float>(js_tonumber(j, 3));
+        color = js_tocolor(j, 4);
+    } else {
+        js_typeerror(j, "Invalid arguments count for graphics.rectangle");
+    }
+
+    DrawRectanglePro(rec, origin, rotation, color);
+
+    js_pushundefined(j);
+}
+
 Color js_tocolor(js_State *j, int idx) {
     Color c;
 
-    js_getproperty(j, -1, "r");
+    js_getproperty(j, idx, "r");
     c.r = js_tointeger(j, -1);
     js_pop(j, 1);
 
-    js_getproperty(j, -1, "g");
+    js_getproperty(j, idx, "g");
     c.g = js_tointeger(j, -1);
     js_pop(j, 1);
 
-    js_getproperty(j, -1, "b");
+    js_getproperty(j, idx, "b");
     c.b = js_tointeger(j, -1);
     js_pop(j, 1);
 
-    js_getproperty(j, -1, "a");
+    js_getproperty(j, idx, "a");
     c.a = js_tointeger(j, -1);
     js_pop(j, 1);
 
     return c;
+}
+
+Vector2 js_tovector2(js_State *j, int idx) {
+    Vector2 v;
+
+    js_getproperty(j, idx, "x");
+    v.x = js_tointeger(j, -1);
+    js_pop(j, 1);
+
+    js_getproperty(j, idx, "y");
+    v.y = js_tointeger(j, -1);
+    js_pop(j, 1);
+
+    return v;
+}
+
+Rectangle js_torectangle(js_State *j, int idx) {
+    Rectangle r;
+
+    js_getproperty(j, idx, "x");
+    r.x = js_tointeger(j, -1);
+    js_pop(j, 1);
+
+    js_getproperty(j, idx, "y");
+    r.y = js_tointeger(j, -1);
+    js_pop(j, 1);
+
+    js_getproperty(j, idx, "width");
+    r.width = js_tointeger(j, -1);
+    js_pop(j, 1);
+
+    js_getproperty(j, idx, "height");
+    r.height = js_tointeger(j, -1);
+    js_pop(j, 1);
+
+    return r;
 }
