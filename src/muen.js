@@ -15,7 +15,7 @@ function Color() {
         return n;
     }
 
-    if (arguments.length == 1) {
+    if (arguments.length === 1) {
         var str = arguments[0];
         if (typeof str !== 'string' || (str.length != 7 && str.length != 9) || str[0] != '#') {
             throw TypeError("Invalid arguments for Color");
@@ -34,6 +34,49 @@ function Color() {
         throw TypeError("Invalid arguments for Color");
     }
 }
+
+function Vector2() {
+    if (arguments.length === 0) {
+        this.x = 0;
+        this.y = 0;
+
+    } else if (arguments.length === 2) {
+        var x = arguments[0];
+        var y = arguments[1];
+        if (typeof x !== 'number' || typeof y !== 'number') {
+            throw TypeError("Invalid arguments for Vector2");
+        }
+        this.x = x;
+        this.y = y;
+    } else {
+        throw TypeError("Invalid arguments for Vector2")
+    }
+}
+
+function Rectangle() {
+    if (arguments.length === 0) {
+        this.x = 0;
+        this.y = 0;
+        this.width = 0;
+        this.height = 0;
+
+    } else if (arguments.length === 4) {
+        var x = arguments[0];
+        var y = arguments[1];
+        var width = arguments[2];
+        var height = arguments[3];
+        if (typeof x !== 'number' || typeof y !== 'number' || typeof width !== 'number' || typeof height !== 'number') {
+            throw TypeError("Invalid arguments for Rectangle");
+        }
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        this.height = height;
+    } else {
+        throw TypeError("Invalid arguments for Rectangle")
+    }
+}
+
 
 function require(name) {
     var cache = require.cache;
