@@ -10,6 +10,7 @@ Checks: >
   -cppcoreguidelines-avoid-magic-numbers,
   -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
   -*-avoid-c-arrays,
+  -clang-analyzer-optin.cplusplus.UninitializedObject,
 WarningsAsErrors: ''
 HeaderFileExtensions:
   - ''
@@ -29,4 +30,3 @@ User:            albert
 CheckOptions:    {}
 SystemHeaders:   false
 ...
-

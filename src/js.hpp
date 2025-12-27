@@ -218,6 +218,8 @@ constexpr auto tryrepr = ::js_tryrepr;
 
 constexpr auto dump = ::js_dump;
 constexpr auto create_function = ::js_create_function;
+constexpr auto get_global_this = ::js_get_global_this;
+constexpr auto pushobject = ::js_pushobject;
 
 auto tofloat(State *j, int idx) -> float;
 auto eval_file(State *j, const char *path) -> void;

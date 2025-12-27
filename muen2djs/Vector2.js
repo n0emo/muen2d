@@ -1,28 +1,31 @@
 /**
- * @module muen/Vector2
- */
-module.exports = Vector2;
-
-/**
- * Represents 2-dimensional vector {x,y}
- * @constructor
  * @class
- * @param {number} x
- * @param {number} y
+ * Represents 2-dimensional vector {x,y}
+ *
+ * @constructor
+ * @param {number} x Vector x component
+ * @param {number} y Vector y component
  */
 function Vector2(x, y) {
     if (typeof x !== "number" || typeof y !== "number") {
         throw TypeError("Invalid arguments for Vector2");
     }
 
-    /** @member {number} */
+    /**
+     * Vector x component
+     * @type {number}
+     */
     this.x = x;
-    /** @member {number} */
+
+    /**
+     * Vector y component
+     * @type {number}
+     */
     this.y = y;
 }
 
 /**
- * Creates Vector2 with x=0 and y=0
+ * Creates zero initialized Vector2
  * @static
  * @returns {Vector2}
  */
@@ -37,3 +40,5 @@ Vector2.zero = function () {
 Vector2.prototype.clone = function () {
     return new Vector2(this.x, this.y);
 };
+
+module.exports = Vector2;

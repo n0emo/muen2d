@@ -15,8 +15,6 @@ auto eval_file(State *j, const char *path) -> void {
     js::pop(j, 1);
 }
 
-auto js_create_function(js_State *J, const char *source) -> void {}
-
 Exception::Exception(js_State *j) {
     js::getproperty(j, -1, "stack");
     auto stack = js::tostring(j, -1);

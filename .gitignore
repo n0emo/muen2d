@@ -10,4 +10,5 @@ compile_commands.json
 .DS_Store
 
 # NPM
-node_modules
+node_modules/
+docs/

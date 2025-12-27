@@ -1,8 +1,6 @@
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
-    "allowJs": true,
-    "checkJs": true,
     "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
@@ -12,7 +10,6 @@
     "verbatimModuleSyntax": true,
     "noImplicitThis": true,
     "alwaysStrict": true,
-    "module": "commonjs",
     "baseUrl": ".",
     "types": [],
     "paths": {

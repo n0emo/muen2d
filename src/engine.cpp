@@ -9,32 +9,26 @@
 
 namespace muen::engine {
 
-constexpr char GLOBALS_JS[] = {
-#include "globals.js.h"
+constexpr char CAMERA_JS[] = {
+#include "Camera.js.h" 
 };
-
+constexpr char COLOR_JS[] = {
+#include "Color.js.h" 
+};
+constexpr char CONSOLE_JS[] = {
+#include "Console.js.h" 
+};
+constexpr char GRAPHICS_JS[] = {
+#include "graphics.js.h" 
+};
+constexpr char RECTANGLE_JS[] = {
+#include "Rectangle.js.h" 
+};
 constexpr char SCREEN_JS[] = {
 #include "screen.js.h" 
 };
-
-constexpr char COLOR_JS[] = {
-#include "Color.js.h"
-};
-
-constexpr char GRAPHICS_JS[] = {
-#include "graphics.js.h"
-};
-
 constexpr char VECTOR2_JS[] = {
-#include "Vector2.js.h"
-};
-
-constexpr char RECTANGLE_JS[] = {
-#include "Rectangle.js.h"
-};
-
-constexpr char CAMERA_JS[] = {
-#include "Camera.js.h"
+#include "Vector2.js.h" 
 };
 
 auto read_config(Engine& self) -> Config;
@@ -55,9 +49,9 @@ auto run(Engine& self, const char *path) -> int {
     self.muen_modules = {
         {"muen/Camera.js", CAMERA_JS},
         {"muen/Color.js", COLOR_JS},
+        {"muen/Console.js", CONSOLE_JS},
         {"muen/Rectangle.js", RECTANGLE_JS},
         {"muen/Vector2.js", VECTOR2_JS},
-        {"muen/globals.js", GLOBALS_JS},
         {"muen/graphics.js", GRAPHICS_JS},
         {"muen/screen.js", SCREEN_JS},
     };

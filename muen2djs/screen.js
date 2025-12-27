@@ -1,20 +1,12 @@
 /**
- * @module muen/screen
+ * @namespace screen
+ * @property {number} dt Time since last frame in seconds
+ * @property {number} width Width of the game screen
+ * @property {number} height Height of the game screen
  */
-module.exports = Object.freeze(new Screen());
+var screen = {};
 
-/**
- * @constructor
- * @class
- */
-function Screen() {}
-
-/**
- * Delta time
- * @property {number}
- * @readonly
- */
-Object.defineProperty(Screen.prototype, "dt", {
+Object.defineProperty(screen, "dt", {
     enumerable: false,
     configurable: false,
     get: function () {
@@ -23,12 +15,7 @@ Object.defineProperty(Screen.prototype, "dt", {
     },
 });
 
-/**
- * Delta time
- * @property {number}
- * @readonly
- */
-Object.defineProperty(Screen.prototype, "width", {
+Object.defineProperty(screen, "width", {
     get: function () {
         // @ts-ignore
         return __muenScreenWidth();
@@ -37,12 +24,7 @@ Object.defineProperty(Screen.prototype, "width", {
     configurable: false,
 });
 
-/**
- * Delta time
- * @property {number}
- * @readonly
- */
-Object.defineProperty(Screen.prototype, "height", {
+Object.defineProperty(screen, "height", {
     get: function () {
         // @ts-ignore
         return __muenScreenHeight();
@@ -50,3 +32,5 @@ Object.defineProperty(Screen.prototype, "height", {
     enumerable: false,
     configurable: false,
 });
+
+module.exports = Object.freeze(screen);

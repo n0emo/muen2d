@@ -1,0 +1,8 @@
+{
+    "name": "muen2d",
+    "version": "0.0.1",
+    "author": "Albert Shefner <usn0emo@gmail.com>)",
+    "files": [
+        "./**/*.js"
+    ]
+}

@@ -1,0 +1,12 @@
+{
+  "plugins": ["node_modules/jsdoc-tsimport-plugin", "plugins/markdown"],
+  "source": {
+    "include": ["./muen2djs/", "README.md"],
+    "includePattern": ".+\\.js$",
+    "excludePattern": "(node_modules/|docs/)"
+  },
+  "opts": {
+    "destination": "./docs",
+    "recurse": true
+  }
+}

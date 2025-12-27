@@ -30,5 +30,10 @@
       "indentWidth": 2,
       "trailingCommas": "none"
     }
+  },
+  "javascript": {
+    "formatter": {
+      "trailingCommas": "es5"
+    }
   }
 }

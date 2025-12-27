@@ -1,10 +1,15 @@
 configure:
-    xmake config --mode=debug
     npm install
+    xmake config --mode=debug
 
-check:
-    xmake check clang.tidy --quiet
+check: check-js check-cpp
+
+check-js:
+    npm run typecheck
     npm run lint
+
+check-cpp:
+    xmake check clang.tidy --quiet
 
 build:
     xmake build muen
@@ -13,6 +18,10 @@ run game:
     xmake run muen {{ justfile_dir() / "examples" / game }}
 
 format:
-    xmake format
     npm run format
+    xmake format
 
+doc-js:
+    npm run doc
+
+prepare: format check

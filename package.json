@@ -1,6 +1,8 @@
 {
   "devDependencies": {
     "@biomejs/biome": "2.3.10",
+    "jsdoc": "^4.0.5",
+    "jsdoc-tsimport-plugin": "^1.0.5",
     "typescript": "^5.9.3"
   },
   "scripts": {
@@ -8,6 +10,7 @@
     "typecheck:muen": "tsc -p muen2djs/tsconfig.json --noEmit",
     "typecheck:examples": "tsc -p examples/tsconfig.json --noEmit",
     "lint": "biome lint",
-    "format": "biome format --write"
+    "format": "biome format --write",
+    "doc": "jsdoc -c jsdoc.json"
   }
 }

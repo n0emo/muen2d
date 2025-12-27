@@ -57,6 +57,10 @@ void js_create_function(js_State *J, const char *source) {
     js_newfunction(J, fun, J->E);
 }
 
+js_Object *js_get_global_this(js_State *j) {
+    return j->G;
+}
+
 static void js_dumpvalue(js_State *J, js_Value v) {
     switch (v.t.type) {
         case JS_TUNDEFINED:
