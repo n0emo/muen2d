@@ -9,8 +9,9 @@
   "excludeNotDocumented": false,
   "excludeInternal": true,
   "sort": ["kind", "instance-first"],
-  "disableSources": false,
+  "disableSources": true,
   "plugin": ["typedoc-material-theme", "typedoc-plugin-merge-modules"],
-  "mergeModulesMergeMode": "module-category",
+  "mergeModulesMergeMode": "module",
+  "readme": "README.md",
   "themeColor": "#ad8ef5"
 }
