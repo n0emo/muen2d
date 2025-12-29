@@ -1,3 +1,5 @@
+var Rectangle = require("muen/Rectangle");
+
 /**
  * @constructor
  * @param {number} id
@@ -35,6 +37,16 @@ Texture.prototype.unload = function () {
 Object.defineProperty(Texture.prototype, "valid", {
     get: function () {
         return __muenTextureIsValid(this);
+    },
+});
+
+Object.defineProperty(Texture.prototype, "source", {
+    get: function () {
+        if (!this.__source) {
+            this.__source = new Rectangle(0,0, this.width, this.height);
+        }
+
+        return this.__source;
     },
 });
 
