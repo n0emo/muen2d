@@ -7,6 +7,8 @@
 #include "bindings/music.hpp"
 #include "bindings/screen.hpp"
 #include "bindings/sound.hpp"
+#include "bindings/texture.hpp"
+
 #include "js.hpp"
 
 namespace muen::bindings {
@@ -25,6 +27,7 @@ auto define(js::State *j) -> void {
     music::define(j);
     screen::define(j);
     sound::define(j);
+    texture::define(j);
 
     globals::define(j);
 

@@ -51,3 +51,15 @@ declare function __muenMusicGetPan(id: number): number;
 declare function __muenMusicSetPan(id: number, pan: number): void;
 declare function __muenMusicGetPitch(id: number): number;
 declare function __muenMusicSetPitch(id: number, pitch: number): void;
+
+interface BasicTexture {
+    id: number;
+    width: number;
+    height: number;
+    mipmaps: number;
+    format: number;
+}
+
+declare function __muenTextureLoad(path: string): BasicTexture;
+declare function __muenTextureUnload(texture: BasicTexture): void;
+declare function __muenTextureIsValid(texture: BasicTexture): boolean;

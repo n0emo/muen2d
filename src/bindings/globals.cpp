@@ -17,6 +17,8 @@ auto define(js_State *j) -> void {
     js::pushliteral(j, INIT_JS);
     js::eval(j);
     js::pop(j, 2);
+
+    js::endtry(j);
 }
 
 } // namespace muen::bindings::globals

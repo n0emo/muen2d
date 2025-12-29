@@ -1,6 +1,8 @@
 #include "types.hpp"
 
 #include "js.hpp"
+#include "mujs.h"
+#include "raylib.h"
 
 namespace muen::bindings::types {
 
@@ -84,4 +86,29 @@ auto tocamera(js_State *j, int idx) -> ::Camera2D {
     return c;
 }
 
+auto totexture(js_State *j, int idx) -> ::Texture {
+    ::Texture t;
+
+    js::getproperty(j, idx, "id");
+    t.id = js::touint32(j, -1);
+    js::pop(j, 1);
+
+    js::getproperty(j, idx, "width");
+    t.width = js::tointeger(j, -1);
+    js::pop(j, 1);
+
+    js::getproperty(j, idx, "height");
+    t.height = js::tointeger(j, -1);
+    js::pop(j, 1);
+
+    js::getproperty(j, idx, "mipmaps");
+    t.mipmaps = js::tointeger(j, -1);
+    js::pop(j, 1);
+
+    js::getproperty(j, idx, "format");
+    t.format = js::tointeger(j, -1);
+    js::pop(j, 1);
+
+    return t;
+}
 } // namespace muen::bindings::types

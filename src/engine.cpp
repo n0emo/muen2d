@@ -37,6 +37,9 @@ constexpr char SOUND_JS[] = {
 constexpr char VECTOR2_JS[] = {
 #include "Vector2.js.h" 
 };
+constexpr char TEXTURE_JS[] = {
+#include "Texture.js.h" 
+};
 
 auto read_config(Engine& self) -> Config;
 
@@ -63,6 +66,7 @@ auto run(Engine& self, const char *path) -> int {
         {"muen/Vector2.js", VECTOR2_JS},
         {"muen/graphics.js", GRAPHICS_JS},
         {"muen/screen.js", SCREEN_JS},
+        {"muen/Texture.js", TEXTURE_JS},
     };
 
     js::setcontext(self.js, &self);
