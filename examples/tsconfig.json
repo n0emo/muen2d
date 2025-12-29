@@ -1,20 +1,7 @@
 {
-  "extends": "../tsconfig.json",
-  "compilerOptions": {
-    "checkJs": true,
-    "baseUrl": ".",
-    "paths": {
-      "muen/*": [
-        "../muen2djs/*"
-      ],
-      "*": [
-        "."
-      ]
-    }
-  },
-  "include": [
-    "**/*.js",
-    "../muen2djs/**/*.js",
-    "../muen2djs/**/*.d.ts"
-  ]
+    "extends": "../tsconfig.json",
+    "include": [
+        "./**/*.js",
+        "../muen2djs/types/**/*.d.ts"
+    ]
 }

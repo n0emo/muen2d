@@ -36,6 +36,35 @@ namespace sound {
 
 } // namespace sound
 
+namespace music {
+
+    struct Music {
+        ::Music music {};
+        float volume = 1.0f;
+        float pitch = 1.0f;
+        float pan = 0.5f;
+    };
+
+    auto load(const std::string& path) -> std::expected<Music, std::string>;
+    auto unload(Music& self) -> void;
+    auto update(Music& self) -> void;
+    auto play(Music& self) -> void;
+    auto stop(Music& self) -> void;
+    auto pause(Music& self) -> void;
+    auto resume(Music& self) -> void;
+    auto seek(Music& self, float cursor) -> void;
+    auto is_playing(const Music& self) -> bool;
+    auto get_looping(const Music& self) -> bool;
+    auto set_looping(Music& self, bool looping) -> void;
+    auto get_volume(const Music& self) -> float;
+    auto set_volume(Music& self, float volume) -> void;
+    auto get_pan(const Music& self) -> float;
+    auto set_pan(Music& self, float pan) -> void;
+    auto get_pitch(const Music& self) -> float;
+    auto set_pitch(Music& self, float pitch) -> void;
+} // namespace music
+
 using Sound = sound::Sound;
+using Music = music::Music;
 
 } // namespace muen::audio

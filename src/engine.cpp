@@ -22,6 +22,9 @@ constexpr char CONSOLE_JS[] = {
 constexpr char GRAPHICS_JS[] = {
 #include "graphics.js.h" 
 };
+constexpr char MUSIC_JS[] = {
+#include "Music.js.h"
+};
 constexpr char RECTANGLE_JS[] = {
 #include "Rectangle.js.h" 
 };
@@ -54,6 +57,7 @@ auto run(Engine& self, const char *path) -> int {
         {"muen/Camera.js", CAMERA_JS},
         {"muen/Color.js", COLOR_JS},
         {"muen/console.js", CONSOLE_JS},
+        {"muen/Music.js", MUSIC_JS},
         {"muen/Rectangle.js", RECTANGLE_JS},
         {"muen/Sound.js", SOUND_JS},
         {"muen/Vector2.js", VECTOR2_JS},
@@ -75,10 +79,15 @@ auto run(Engine& self, const char *path) -> int {
     try {
         mujs_catch(self.js);
 
-        js::pushstring(
+        js::pushliteral(
             self.js,
             R"(
             var Game = require("Game");
+
+            if (!Game) {
+                throw Error("Game module does not export Game constructor. Forgot `module.exports = Game`?");
+            }
+
             var game = new Game();
             )"
         );
@@ -105,6 +114,8 @@ auto run(Engine& self, const char *path) -> int {
     auto a = audio::create();
     defer(audio::close(a));
 
+    // TODO: free resources
+
     try {
         mujs_catch(self.js);
 
@@ -119,6 +130,12 @@ auto run(Engine& self, const char *path) -> int {
         js::pop(self.js, 1);
 
         while (!window::should_close(w)) {
+            for (auto [id, music] : self.musics) {
+                if (audio::music::is_playing(music)) {
+                    audio::music::update(music);
+                }
+            }
+
             js::getglobal(self.js, "game");
             js::getproperty(self.js, -1, "update");
             js::rot2(self.js);
@@ -126,6 +143,7 @@ auto run(Engine& self, const char *path) -> int {
             js::pop(self.js, 1);
 
             window::begin_drawing(w);
+            window::clear(w);
 
             js::getglobal(self.js, "game");
             js::getproperty(self.js, -1, "draw");
@@ -178,6 +196,47 @@ auto unload_sound(Engine& self, uint32_t id) -> void {
 
 auto get_sound(Engine& self, uint32_t id) -> std::optional<audio::Sound> {
     if (auto it = self.sounds.find(id); it != self.sounds.end()) {
+        return it->second;
+    } else {
+        return std::nullopt;
+    }
+}
+
+auto load_music(Engine& self, const std::string& filename) -> std::expected<uint32_t, std::string> {
+    static std::atomic_uint32_t id_counter = 1;
+
+    if (auto search = self.musics_cache.find(filename); search != self.musics_cache.end()) {
+        return search->second;
+    }
+
+    auto id = id_counter++;
+
+    auto path = std::string {self.root_path};
+    if (path[path.size() - 1] != '/') {
+        path += '/';
+    }
+    path += filename;
+
+    auto music = audio::music::load(path);
+    if (!music.has_value()) {
+        return std::unexpected(music.error());
+    }
+
+    self.musics.insert({id, music.value()});
+    self.musics_cache.insert({filename, id});
+    return id;
+}
+
+auto unload_music(Engine& self, uint32_t id) -> void {
+    if (auto it = self.musics.find(id); it != self.musics.end()) {
+        auto music = it->second;
+        self.musics.erase(it);
+        audio::music::unload(music);
+    }
+}
+
+auto get_music(Engine& self, uint32_t id) -> std::optional<audio::Music> {
+    if (auto it = self.musics.find(id); it != self.musics.end()) {
         return it->second;
     } else {
         return std::nullopt;

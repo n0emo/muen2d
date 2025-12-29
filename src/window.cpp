@@ -36,6 +36,10 @@ auto end_drawing(Window& self) -> void {
     EndDrawing();
 }
 
+auto clear(Window& self) -> void {
+    ClearBackground(BLACK);
+}
+
 auto draw_fps(Window& self) -> void {
     DrawFPS(15, 15);
 }

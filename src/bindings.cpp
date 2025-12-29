@@ -4,6 +4,7 @@
 #include "bindings/fs.hpp"
 #include "bindings/globals.hpp"
 #include "bindings/graphics.hpp"
+#include "bindings/music.hpp"
 #include "bindings/screen.hpp"
 #include "bindings/sound.hpp"
 #include "js.hpp"
@@ -21,6 +22,7 @@ auto define(js::State *j) -> void {
     console::define(j);
     fs::define(j);
     graphics::define(j);
+    music::define(j);
     screen::define(j);
     sound::define(j);
 
