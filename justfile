@@ -5,10 +5,12 @@ configure:
 check: check-js check-cpp
 
 check-js:
-    npm run typecheck
+    npm run typecheck:muen
+    npm run typecheck:examples
     npm run lint
 
 check-cpp:
+    xmake build muen
     xmake check clang.tidy --quiet
 
 build:

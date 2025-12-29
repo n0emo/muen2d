@@ -8,9 +8,8 @@
     "typescript": "^5.9.3"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit",
-    "typecheck:muen": "tsc -p muen2djs/tsconfig.json --noEmit",
-    "typecheck:examples": "tsc -p examples/tsconfig.json --noEmit",
+    "typecheck:muen": "tsc -p muen2djs/tsconfig.json",
+    "typecheck:examples": "tsc -p examples/tsconfig.json",
     "lint": "biome lint",
     "format": "biome format --write",
     "doc": "typedoc"

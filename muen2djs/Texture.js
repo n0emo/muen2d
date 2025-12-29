@@ -9,16 +9,27 @@ var Rectangle = require("muen/Rectangle");
  * @param {number} format
  */
 function Texture(id, width, height, mipmaps, format) {
-    if (id >= 0) {
-        this.id = assertInteger(id);
-    } else {
+    if (id < 0) {
         throw TypeError("Texture id must be a unsigned integer");
     }
 
+    /** @type number */
+    this.id = assertInteger(id);
+
+    /** @type number */
     this.width = assertInteger(width);
+
+    /** @type number */
     this.height = assertInteger(height);
+
+    /** @type number */
     this.mipmaps = assertInteger(mipmaps);
+
+    /** @type number */
     this.format = assertInteger(format);
+
+    /** @type {Rectangle | undefined} */
+    this.$source = undefined;
 }
 
 /**
@@ -42,11 +53,11 @@ Object.defineProperty(Texture.prototype, "valid", {
 
 Object.defineProperty(Texture.prototype, "source", {
     get: function () {
-        if (!this.__source) {
-            this.__source = new Rectangle(0, 0, this.width, this.height);
+        if (!this.$source) {
+            this.$source = new Rectangle(0, 0, this.width, this.height);
         }
 
-        return this.__source;
+        return this.$source;
     },
 });
 

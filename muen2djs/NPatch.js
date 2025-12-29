@@ -51,3 +51,5 @@ Object.defineProperties(NPatch, {
         writable: false,
     },
 });
+
+module.exports = NPatch;
