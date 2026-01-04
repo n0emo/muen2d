@@ -1,10 +1,10 @@
-name: Typecheck JavaScript modules
+name: Typecheck JavaScript examples
 
 on:
   - push
 
 jobs:
-  check:
+  check-js:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
