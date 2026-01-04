@@ -1,25 +1,19 @@
-var graphics = require("muen/graphics");
-var Color = require("muen/Color");
-var Texture = require("muen/Texture");
-var Vector2 = require("muen/Vector2");
+import graphics from "muen:graphics";
+import Color from "muen:Color";
+import Texture from "muen:Texture";
+import Vector2 from "muen:Vector2";
 
-function Game() {
-    this.config = { title: "Graphics" };
-    this.bgColor = Color.fromHex("#181818");
-    this.t = undefined;
+export const config = { title: "Graphics" };
+
+const bgColor = Color.fromHex("#181818");
+let t = undefined;
+
+export function load() {
+    t = new Texture("cat.jpg");
+    console.log(t);
 }
 
-Game.prototype.load = function () {
-    this.t = Texture.load("cat.jpg");
-    console.log(this.t.id);
-    console.log(this.t.valid);
-};
-
-Game.prototype.update = function () {};
-
-Game.prototype.draw = function () {
-    graphics.clear(this.bgColor);
-    graphics.textureEx(this.t, new Vector2(0, 0), 0, 0.65, new Color(255, 255, 255));
-};
-
-module.exports = Game;
+export function draw() {
+    graphics.clear(bgColor);
+    graphics.textureEx(t, new Vector2(0, 0), 0, 0.65, new Color(255, 255, 255));
+}

@@ -1,24 +1,19 @@
-var graphics = require("muen/graphics");
-var Color = require("muen/Color");
-var Vector2 = require("muen/Vector2");
-var Rectangle = require("muen/Rectangle");
+import graphics from "muen:graphics";
+import Color from "muen:Color";
+import Vector2 from "muen:Vector2";
+import Rectangle from "muen:Rectangle";
 
-function Game() {
-    this.config = { title: "Graphics" };
-    this.bgColor = Color.fromHex("#181818");
-}
+export const config = { title: "Graphics" };
 
-Game.prototype.update = function () {};
+const bgColor = { r: 100, g: 100, b: 100, a: 255 };
 
-Game.prototype.draw = function () {
-    graphics.clear(this.bgColor);
+export function draw() {
+    graphics.clear(bgColor);
     graphics.rectangle(50, 100, 30, 30, Color.fromHex("#c49bffff"));
     graphics.rectangleV(new Vector2(100, 100), new Vector2(30, 30), Color.fromHex("#bf37bfff"));
     graphics.rectangleRec(new Rectangle(150, 100, 30, 30), Color.fromHex("#ff9ba5ff"));
     graphics.rectanglePro(new Rectangle(210, 100, 30, 30), new Vector2(10, 10), 45, Color.fromHex("#ffc787ff"));
 
-    // Error running game: TypeError: Invalid arguments count for graphics.rectangle
+    // TODO: this should give a runtime error actually
     // graphics.rectangle(50, 100, 30, 30, 40, Color.fromHex("#c49bffff"));
-};
-
-module.exports = Game;
+}

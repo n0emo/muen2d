@@ -6,21 +6,12 @@
     "indentWidth": 4,
     "lineWidth": 120,
     "enabled": true,
-    "includes": ["./*.json", "./examples/**/*.js", "./muen2djs/**/*.js", "./muen2djs/**/*.d.ts"]
+    "includes": ["./*.json", "./examples/**/*.js", "./typings/**/*.d.ts"]
   },
   "linter": {
     "enabled": true,
     "includes": ["./muen2djs/**/*.js", "./muen2djs/**/*.d.ts"],
-    "rules": {
-      "complexity": {
-        "useArrowFunction": "off",
-        "noArguments": "off"
-      },
-      "suspicious": {
-        "noTsIgnore": "off",
-        "noExplicitAny": "off"
-      }
-    }
+    "rules": {}
   },
   "assist": {
     "enabled": false
@@ -33,7 +24,7 @@
   },
   "javascript": {
     "formatter": {
-      "trailingCommas": "es5"
+      "trailingCommas": "all"
     }
   }
 }

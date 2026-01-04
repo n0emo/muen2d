@@ -5,13 +5,14 @@
     "typedoc": "^0.28.15",
     "typedoc-material-theme": "^1.4.1",
     "typedoc-plugin-merge-modules": "^7.0.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "@muen/typings": "./typings"
   },
   "scripts": {
-    "typecheck:muen": "tsc -p muen2djs/tsconfig.json",
-    "typecheck:examples": "tsc -p examples/tsconfig.json",
+    "typecheck": "tsc",
     "lint": "biome lint",
     "format": "biome format --write",
-    "doc": "typedoc"
+    "doc": "typedoc",
+    "doc:watch": "typedoc --watch"
   }
 }

@@ -1,16 +1,16 @@
-var Music = require("muen/Music");
+import Music from "muen:Music";
+import screen from "muen:screen";
 
-function Game() {}
+let music;
 
-Game.prototype.load = function () {
-    this.music = Music.load("GloriousMorning.mp3");
-    this.music.looping = true;
-    this.music.volume = 0.5;
-    this.music.pitch = 1.5;
-    this.music.play();
-};
+export function load() {
+    music = new Music("GloriousMorning.mp3");
+    music.looping = true;
+    music.volume = 0.5;
+    music.pitch = 1.2;
+    music.play();
+}
 
-Game.prototype.update = function () {};
-Game.prototype.draw = function () {};
-
-module.exports = Game;
+export function update() {
+    music.pan = Math.cos(3.0 * screen.time) * 0.5 + 0.5;
+}

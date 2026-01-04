@@ -5,8 +5,7 @@ configure:
 check: check-js check-cpp
 
 check-js:
-    npm run typecheck:muen
-    npm run typecheck:examples
+    npm run typecheck
     npm run lint
 
 check-cpp:

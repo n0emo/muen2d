@@ -1,16 +1,21 @@
 ---
 Checks: >
-  clang-diagnostic-*,
-  clang-analyzer-*,
-  modernize-*,
-  cppcoreguidelines-*,
-  performance-*,
   bugprone-*,
-  -readability-magic-numbers,
-  -cppcoreguidelines-avoid-magic-numbers,
-  -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+  clang-analyzer-*,
+  clang-diagnostic-*,
+  cppcoreguidelines-*,
+  modernize-*,
+  performance-*,
   -*-avoid-c-arrays,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-suspicious-include,
   -clang-analyzer-optin.cplusplus.UninitializedObject,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -cppcoreguidelines-owning-memory,
+  -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+  -cppcoreguidelines-pro-type-vararg,
+  -readability-magic-numbers,
 WarningsAsErrors: ''
 HeaderFileExtensions:
   - ''

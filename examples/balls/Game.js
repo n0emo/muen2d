@@ -1,46 +1,62 @@
-var Color = require("muen/Color");
-var graphics = require("muen/graphics");
+import Color from "muen:Color";
+import graphics from "muen:graphics";
+import screen from "muen:screen";
 
-var Ball = require("./Ball");
+import { Ball } from "./Ball.js";
 
-function Game() {
-    console.log("Creating Balls game!");
+class Game {
+    constructor() {
+        console.log("Creating Balls game!");
 
-    this.config = {
-        fps: 165,
-        width: 800,
-        height: 600,
-        title: "Balls",
-    };
+        this.bgColor = Color.fromHex("#181818");
+        this.balls = [];
 
-    this.bgColor = Color.fromHex("#181818");
-    this.balls = [];
-    for (var i = 1; i < 500; i++) {
-        var x = Math.random() * (this.config.width - 30) + 15;
-        var y = Math.random() * (this.config.height - 30) + 15;
-        var angle = Math.random() * 360;
-        var color = new Color(randomByte(), randomByte(), randomByte());
-        this.balls.push(new Ball(x, y, angle, color));
+        console.log("Game created!");
     }
 
-    console.log("Game created!");
+    load() {
+        for (var i = 1; i < 500; i++) {
+            var x = Math.random() * (screen.width - 30) + 16;
+            var y = Math.random() * (screen.height - 30) + 16;
+            var angle = Math.random() * 360;
+            var color = new Color(randomByte(), randomByte(), randomByte());
+            this.balls.push(new Ball(x, y, angle, color));
+        }
+    }
+
+    update() {
+        for (var i = 0; i < this.balls.length; i++) {
+            this.balls[i].update();
+        }
+    }
+
+    draw() {
+        graphics.clear(this.bgColor);
+        for (var i = 0; i < this.balls.length; i++) {
+            this.balls[i].draw();
+        }
+    }
 }
 
-Game.prototype.update = function () {
-    for (var i = 0; i < this.balls.length; i++) {
-        this.balls[i].update();
-    }
+const randomByte = () => Math.floor(Math.random() * 256);
+
+let game = new Game();
+
+export const config = {
+    fps: 165,
+    width: 800,
+    height: 600,
+    title: "Balls",
 };
 
-Game.prototype.draw = function () {
-    graphics.clear(this.bgColor);
-    for (var i = 0; i < this.balls.length; i++) {
-        this.balls[i].draw();
-    }
-};
-
-function randomByte() {
-    return Math.floor(Math.random() * 256);
+export function load() {
+    game.load();
 }
 
-module.exports = Game;
+export function update() {
+    game.update();
+}
+
+export function draw() {
+    game.draw();
+}
