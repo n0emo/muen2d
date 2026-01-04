@@ -1,4 +1,4 @@
-import Rectangle from "./muen:Rectangle";
+import Rectangle from "muen:Rectangle";
 
 /**
  * Texture, tex data stored in GPU memory (VRAM)

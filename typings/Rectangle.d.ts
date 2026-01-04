@@ -1,4 +1,4 @@
-import Vector2 from "./muen:Vector2";
+import Vector2 from "muen:Vector2";
 
 export interface BasicRectangle {
     x: number;

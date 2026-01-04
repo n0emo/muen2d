@@ -1,4 +1,4 @@
-import Rectangle from "./muen:Rectangle";
+import Rectangle from "muen:Rectangle";
 
 /**
  * NPatch, n-patch layout info

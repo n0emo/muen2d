@@ -1,5 +1,5 @@
-import { Console } from "./muen:console";
-import * as muenMod from "./muen";
+import { Console } from "muen:console";
+import * as muenMod from "muen";
 
 declare global {
     const console: Console;
