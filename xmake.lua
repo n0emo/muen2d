@@ -1,7 +1,7 @@
 add_rules("mode.debug", "mode.release")
 add_rules("plugin.compile_commands.autoupdate", {outputdir = "build"})
 
-add_requires("mujs 1.3.7")
+add_requires("quickjs-ng 0.11.0", {alias = "quickjs", configs = {debug = true}} )
 add_requires("raylib 5.5")
 add_requires("spdlog 1.16.0", {
     configs = {
@@ -14,13 +14,16 @@ set_languages({"c++23", "c11"})
 
 target("muen")
     set_kind("binary")
-    add_files("src/**.cpp")
-    add_files("src/**.c")
-    add_files("muen2djs/**.js")
+    add_files(
+        "src/engine.cpp",
+        "src/main.cpp",
+        "src/plugins/*.cpp"
+    )
+    add_files("src/**.js")
     add_includedirs("src", {public = true})
     add_headerfiles("src/(**.hpp)")
     add_headerfiles("src/(**.h)")
-    add_packages({"mujs", "spdlog", "raylib"})
+    add_packages({"quickjs", "spdlog", "raylib"})
     add_defines("SPDLOG_COMPILED_LIB")
     add_rules("utils.bin2c", {extensions = ".js"})
 

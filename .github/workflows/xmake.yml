@@ -4,7 +4,7 @@ on:
   - push
 
 jobs:
-  build:
+  build-engine-matrix:
     concurrency:
       group: ${{ github.ref }}-${{ github.base_ref }}-${{ github.head_ref }}-${{ matrix.os }}-build
 
@@ -61,3 +61,12 @@ jobs:
             build/windows/x64/release/muen.exe
             build/windows/arm64/release/muen.exe
             build/macosx/arm64/release/muen
+
+  build-engine-summary:
+      name: build-engine
+      runs-on: ubuntu-latest
+      needs: build-engine-matrix
+      if: always()
+      steps:
+        - run: exit 1
+          if: ${{ needs.build-engine-matrix.result != 'success' }}

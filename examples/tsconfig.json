@@ -1,7 +1,0 @@
-{
-    "extends": "../tsconfig.json",
-    "include": [
-        "./**/*.js",
-        "../muen2djs/types/**/*.d.ts"
-    ]
-}

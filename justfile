@@ -1,12 +1,13 @@
-configure:
+set windows-shell := ["C:/Program Files/Git/bin/bash.exe", "-c"]
+
+configure *args:
     npm install
-    xmake config --mode=debug
+    xmake config --mode=debug {{ args }}
 
 check: check-js check-cpp
 
 check-js:
-    npm run typecheck:muen
-    npm run typecheck:examples
+    npm run typecheck
     npm run lint
 
 check-cpp:

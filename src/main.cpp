@@ -1,8 +1,8 @@
 #include <iostream>
 #include <span>
 
-#include "engine.hpp"
-#include "defer.hpp"
+#include <engine.hpp>
+#include <defer.hpp>
 
 auto main(int argc, char **argv) -> int {
     using namespace muen;
@@ -16,4 +16,5 @@ auto main(int argc, char **argv) -> int {
     auto e = engine::create();
     defer(engine::destroy(e));
     return engine::run(e, args[1]);
+    return 0;
 }

@@ -1,285 +1,224 @@
 #include "engine.hpp"
 
+#include <fstream>
+#include <sstream>
+
 #include <spdlog/spdlog.h>
 
-#include "audio.hpp"
-#include "js.hpp"
-#include "bindings.hpp"
-#include "defer.hpp"
-#include "window.hpp"
+#include <defer.hpp>
+#include <engine/game.hpp>
+#include <engine/window.hpp>
+#include <plugins/audio.hpp>
+#include <plugins/console.hpp>
+#include <plugins/graphics.hpp>
+#include <plugins/math.hpp>
+#include <plugins/window.hpp>
 
 namespace muen::engine {
 
-constexpr char CAMERA_JS[] = {
-#include "Camera.js.h" 
-};
-constexpr char COLOR_JS[] = {
-#include "Color.js.h" 
-};
-constexpr char CONSOLE_JS[] = {
-#include "console.js.h" 
-};
-constexpr char GRAPHICS_JS[] = {
-#include "graphics.js.h" 
-};
-constexpr char MUSIC_JS[] = {
-#include "Music.js.h"
-};
-constexpr char RECTANGLE_JS[] = {
-#include "Rectangle.js.h" 
-};
-constexpr char SCREEN_JS[] = {
-#include "screen.js.h" 
-};
-constexpr char SOUND_JS[] = {
-#include "Sound.js.h"
-};
-constexpr char VECTOR2_JS[] = {
-#include "Vector2.js.h" 
-};
-constexpr char TEXTURE_JS[] = {
-#include "Texture.js.h" 
-};
+void report_error(JSContext *js, const std::string& message, JSValue e) {
+    defer(JS_FreeValue(js, e));
 
-auto read_config(Engine& self) -> Config;
+    const char *msg = JS_ToCString(js, e);
+    defer(JS_FreeCString(js, msg));
+
+    const auto stack = JS_GetPropertyStr(js, e, "stack");
+    defer(JS_FreeValue(js, stack));
+    const auto stack_str = JS_ToCString(js, stack);
+    defer(JS_FreeCString(js, stack_str));
+
+    spdlog::error("{}: {}\n{}", message, msg, stack_str);
+}
+
+void report_error(JSContext *js, const std::string& message) {
+    const auto e = JS_GetException(js);
+    report_error(js, message, e);
+}
 
 auto create() -> Engine {
-    auto js = js::newstate(nullptr, nullptr, js::STRICT);
-    return Engine {.js = js};
+    auto runtime = JS_NewRuntime();
+    auto js = JS_NewContext(runtime);
+    auto e = Engine {.runtime = runtime, .js = js};
+    JS_SetContextOpaque(js, &e);
+    return e;
 }
 
 void destroy(Engine& self) {
-    js::freestate(self.js);
+    JS_FreeContext(self.js);
+    JS_FreeRuntime(self.runtime);
+}
+
+auto module_loader(JSContext *ctx, const char *module_name, void *opaque) -> JSModuleDef * {
+    auto e = static_cast<Engine *>(opaque);
+
+    if (auto cm = e->c_modules.find(module_name); cm != e->c_modules.end()) {
+        return cm->second;
+    } else {
+        auto code = std::string {};
+        if (auto jm = e->js_modules.find(module_name); jm != e->js_modules.end()) {
+            code = jm->second;
+        } else {
+            // TODO: error handling
+            auto path = resolve_path(*e, module_name);
+            auto file = std::ifstream {path};
+            auto buf = std::stringstream {};
+            buf << file.rdbuf();
+            code = buf.str();
+        }
+
+        JSValue ret =
+            JS_Eval(ctx, code.c_str(), code.size(), module_name, JS_EVAL_TYPE_MODULE | JS_EVAL_FLAG_COMPILE_ONLY);
+        if (JS_IsException(ret)) {
+            return nullptr;
+        }
+        JS_FreeValue(ctx, ret);
+
+        return static_cast<JSModuleDef *>(JS_VALUE_GET_PTR(ret));
+    }
 }
 
 auto run(Engine& self, const char *path) -> int {
     window::setup();
 
-    self.root_path = path;
-    self.muen_modules = {
-        {"muen/Camera.js", CAMERA_JS},
-        {"muen/Color.js", COLOR_JS},
-        {"muen/console.js", CONSOLE_JS},
-        {"muen/Music.js", MUSIC_JS},
-        {"muen/Rectangle.js", RECTANGLE_JS},
-        {"muen/Sound.js", SOUND_JS},
-        {"muen/Vector2.js", VECTOR2_JS},
-        {"muen/graphics.js", GRAPHICS_JS},
-        {"muen/screen.js", SCREEN_JS},
-        {"muen/Texture.js", TEXTURE_JS},
-    };
-
-    js::setcontext(self.js, &self);
-
-    bindings::define(self.js);
-
-    auto game_path = std::string {path};
-    if (game_path[game_path.size() - 1] != '/') {
-        game_path += '/';
+    self.root_path = std::string {path};
+    if (self.root_path[self.root_path.size() - 1] != '/') {
+        self.root_path += '/';
     }
-    game_path += "Game.js";
 
-    Config config;
-    try {
-        mujs_catch(self.js);
+    register_plugin(self, plugins::console::plugin(self.js));
+    register_plugin(self, plugins::math::plugin(self.js));
+    register_plugin(self, plugins::window::plugin(self.js));
+    register_plugin(self, plugins::graphics::plugin(self.js));
+    register_plugin(self, plugins::audio::plugin(self.js));
 
-        js::pushliteral(
-            self.js,
-            R"(
-            var Game = require("Game");
+    JS_SetModuleLoaderFunc(self.runtime, nullptr, module_loader, &self);
 
-            if (!Game) {
-                throw Error("Game module does not export Game constructor. Forgot `module.exports = Game`?");
-            }
+    for (const auto& callback : self.load_callbacks) {
+        callback();
+        // TODO: better error handling
+        if (JS_HasException(self.js)) {
+            report_error(self.js, "Exception occured while loading plugins");
+            return 1;
+        }
+    }
 
-            var game = new Game();
-            )"
-        );
-        js::eval(self.js);
-        js::pop(self.js, 1);
-        js::endtry(self.js);
+    defer({
+        for (const auto& callback : self.unload_callbacks) {
+            callback();
+        }
+    });
 
-        config = read_config(self);
-    } catch (const js::Exception& e) {
-        spdlog::error("Error initializing game: {}", e.what());
+    const auto game_result = game::create(self.js, self.root_path);
+    if (!game_result.has_value()) {
+        report_error(self.js, "Exception occured while initializing game", game_result.error());
         return 1;
     }
+    auto game = *game_result;
+    defer(game::destroy(game));
 
     auto w = window::create(
         window::Config {
-            .width = config.width,
-            .height = config.height,
-            .fps = config.fps,
-            .title = config.title,
+            .width = game.config.width,
+            .height = game.config.height,
+            .fps = game.config.fps,
+            .title = game.config.title,
         }
     );
     defer(window::close(w));
 
-    auto a = audio::create();
-    defer(audio::close(a));
+    // auto a = audio::create();
+    // defer(audio::close(a));
 
-    // TODO: free resources
-
-    try {
-        mujs_catch(self.js);
-
-        js::pushliteral(
-            self.js,
-            R"(
-            if (game.load) {
-                game.load();
-            })"
-        );
-        js::eval(self.js);
-        js::pop(self.js, 1);
-
-        while (!window::should_close(w)) {
-            for (auto [id, music] : self.musics) {
-                if (audio::music::is_playing(music)) {
-                    audio::music::update(music);
-                }
-            }
-
-            js::getglobal(self.js, "game");
-            js::getproperty(self.js, -1, "update");
-            js::rot2(self.js);
-            js::call(self.js, 0);
-            js::pop(self.js, 1);
-
-            window::begin_drawing(w);
-            window::clear(w);
-
-            js::getglobal(self.js, "game");
-            js::getproperty(self.js, -1, "draw");
-            js::rot2(self.js);
-            js::call(self.js, 0);
-            js::pop(self.js, 1);
-
-            window::draw_fps(w);
-            window::end_drawing(w);
-        }
-        js::endtry(self.js);
-    } catch (js::Exception& e) {
-        spdlog::error("Error running game: {}\n", e.what());
-        js::dump(self.js);
+    if (auto result = game::load(game); !result.has_value()) {
+        report_error(self.js, "Exception occured while initializing game");
         return 1;
+    }
+
+    while (!window::should_close(w)) {
+        for (const auto& callback : self.update_callbacks) {
+            callback();
+            // TODO: better error handling
+            if (JS_HasException(self.js)) {
+                report_error(self.js, "Exception occured while updating plugins");
+                return 1;
+            }
+        }
+
+        if (auto result = game::update(game); !result.has_value()) {
+            report_error(self.js, "Exception occured while updating game");
+            return 1;
+        }
+
+        window::begin_drawing(w);
+
+        for (const auto& callback : self.draw_callbacks) {
+            callback();
+            // TODO: better error handling
+            if (JS_HasException(self.js)) {
+                report_error(self.js, "Exception occured while updating plugins");
+                return 1;
+            }
+        }
+
+        if (auto result = game::draw(game); !result.has_value()) {
+            report_error(self.js, "Exception occured while rendering game");
+            return 1;
+        }
+
+        window::draw_fps(w);
+        window::end_drawing(w);
     }
 
     return 0;
 }
 
-auto is_audio_ready(Engine& self) -> bool {
-    return ::IsAudioDeviceReady();
+auto register_plugin(Engine& self, const plugins::EnginePlugin& desc) -> void {
+    for (const auto& [name, module] : desc.c_modules) {
+        // TODO: check if already exists
+        self.c_modules.insert({name, module});
+    }
+
+    for (const auto& [name, module] : desc.js_modules) {
+        // TODO: check if already exists
+        self.js_modules.insert({name, module});
+    }
+
+    if (desc.load != nullptr) {
+        self.load_callbacks.emplace_back(desc.load);
+    }
+
+    if (desc.unload != nullptr) {
+        self.unload_callbacks.emplace_back(desc.unload);
+    }
+
+    if (desc.update != nullptr) {
+        self.update_callbacks.emplace_back(desc.update);
+    }
+
+    if (desc.draw != nullptr) {
+        self.draw_callbacks.emplace_back(desc.draw);
+    }
+
+    spdlog::info("Registered `{}` plugin", desc.name);
 }
 
-auto load_sound(Engine& self, std::string path) -> std::expected<uint32_t, std::string> {
-    static std::atomic_uint32_t id_counter = 1;
-
-    if (auto search = self.sounds_cache.find(path); search != self.sounds_cache.end()) {
-        return search->second;
-    }
-
-    auto id = id_counter++;
-    auto sound = audio::sound::load(path);
-    if (!sound.has_value()) {
-        return std::unexpected(sound.error());
-    }
-
-    self.sounds.insert({id, sound.value()});
-    self.sounds_cache.insert({std::move(path), id});
-    return id;
+auto from_js(JSContext *js) -> Engine& {
+    auto ptr = static_cast<Engine *>(JS_GetContextOpaque(js));
+    assert(ptr);
+    return *ptr;
 }
 
-auto unload_sound(Engine& self, uint32_t id) -> void {
-    if (auto it = self.sounds.find(id); it != self.sounds.end()) {
-        auto sound = it->second;
-        self.sounds.erase(it);
-        audio::sound::unload(sound);
+auto resolve_path(const Engine& self, const std::string& path) -> std::string {
+    if (path.starts_with("/")) {
+        return path;
     }
-}
-
-auto get_sound(Engine& self, uint32_t id) -> std::optional<audio::Sound> {
-    if (auto it = self.sounds.find(id); it != self.sounds.end()) {
-        return it->second;
-    } else {
-        return std::nullopt;
-    }
-}
-
-auto load_music(Engine& self, const std::string& filename) -> std::expected<uint32_t, std::string> {
-    static std::atomic_uint32_t id_counter = 1;
-
-    if (auto search = self.musics_cache.find(filename); search != self.musics_cache.end()) {
-        return search->second;
-    }
-
-    auto id = id_counter++;
-
-    auto path = std::string {self.root_path};
-    if (path[path.size() - 1] != '/') {
-        path += '/';
-    }
-    path += filename;
-
-    auto music = audio::music::load(path);
-    if (!music.has_value()) {
-        return std::unexpected(music.error());
-    }
-
-    self.musics.insert({id, music.value()});
-    self.musics_cache.insert({filename, id});
-    return id;
-}
-
-auto unload_music(Engine& self, uint32_t id) -> void {
-    if (auto it = self.musics.find(id); it != self.musics.end()) {
-        auto music = it->second;
-        self.musics.erase(it);
-        audio::music::unload(music);
-    }
-}
-
-auto get_music(Engine& self, uint32_t id) -> std::optional<audio::Music> {
-    if (auto it = self.musics.find(id); it != self.musics.end()) {
-        return it->second;
-    } else {
-        return std::nullopt;
-    }
-}
-
-auto read_config(Engine& self) -> Config {
-    mujs_catch(self.js);
-
-    auto config = Config {};
-    js::getglobal(self.js, "game");
-    if (js::hasproperty(self.js, -1, "config")) {
-        if (js::hasproperty(self.js, -1, "fps")) {
-            config.fps = js::tointeger(self.js, -1);
-            js::pop(self.js, 1);
-        }
-
-        if (js::hasproperty(self.js, -1, "width")) {
-            config.width = js::tointeger(self.js, -1);
-            js::pop(self.js, 1);
-        }
-
-        if (js::hasproperty(self.js, -1, "height")) {
-            config.height = js::tointeger(self.js, -1);
-            js::pop(self.js, 1);
-        }
-
-        if (js::hasproperty(self.js, -1, "title")) {
-            config.title = js::tostring(self.js, -1);
-            js::pop(self.js, 1);
-        }
-
-        js::pop(self.js, 1);
-    }
-    js::pop(self.js, 1);
-
-    js::endtry(self.js);
-
-    return config;
+    return self.root_path + path;
 }
 
 } // namespace muen::engine
+
+#include "./engine/audio.cpp"
+#include "./engine/game.cpp"
+#include "./engine/music.cpp"
+#include "./engine/sound.cpp"
+#include "./engine/window.cpp"
