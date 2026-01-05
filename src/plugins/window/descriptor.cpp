@@ -7,6 +7,7 @@ auto plugin(JSContext *js) -> EnginePlugin {
         .name = "window",
         .c_modules = {
             {"muen:screen", screen_module(js)},
+            {"muen:mouse", mouse::module(js)},
         },
     };
 }
