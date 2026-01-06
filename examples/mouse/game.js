@@ -11,6 +11,10 @@ const blue = Color.fromHex("#4e3affff");
 const red = Color.fromHex("#ff6161ff");
 const purple = Color.fromHex("#773bcbff");
 
+export function load() {
+    mouse.enabled = false;
+}
+
 export function draw() {
     graphics.clear(black);
     if (mouse.isButtonDown("left") && mouse.isButtonDown("right")) {
