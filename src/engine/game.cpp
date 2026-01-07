@@ -7,7 +7,8 @@
 
 #include <spdlog/spdlog.h>
 
-#include "defer.hpp"
+#include <defer.hpp>
+#include <jsutil.hpp>
 
 namespace muen::game {
 

@@ -127,7 +127,7 @@ static auto from_hex(JSContext *js, JSValue this_value, int argc, JSValue *argv)
     defer(JS_FreeCString(js, hex_str));
 
     std::string hex(hex_str);
-    
+
     if (!hex.empty() && hex[0] == '#') {
         hex = hex.substr(1);
     }
@@ -137,7 +137,7 @@ static auto from_hex(JSContext *js, JSValue this_value, int argc, JSValue *argv)
     }
 
     unsigned int r = 0, g = 0, b = 0, a = 255;
-    
+
     auto parse_hex_pair = [](const std::string& str, size_t pos) -> unsigned int {
         unsigned int value = 0;
         std::from_chars(str.data() + pos, str.data() + pos + 2, value, 16);
@@ -147,7 +147,7 @@ static auto from_hex(JSContext *js, JSValue this_value, int argc, JSValue *argv)
     r = parse_hex_pair(hex, 0);
     g = parse_hex_pair(hex, 2);
     b = parse_hex_pair(hex, 4);
-    
+
     if (hex.length() == 8) {
         a = parse_hex_pair(hex, 6);
     }
@@ -233,12 +233,11 @@ static auto set_a(::JSContext *js, ::JSValueConst this_val, ::JSValueConst val) 
 
 static auto to_string(::JSContext *js, JSValue this_val, int argc, JSValue *argv) -> ::JSValue {
     auto col = pointer_from_value(js, this_val);
-    const auto str = std::format("Color {{ r: {}, g: {}, b: {}, a: {} }}", 
-                                  col->r, col->g, col->b, col->a);
+    const auto str = to_string(*col);
     return JS_NewString(js, str.c_str());
 }
 
-static const auto PROTO_FUNCS = std::array{
+static const auto PROTO_FUNCS = std::array {
     ::JSCFunctionListEntry JS_CGETSET_DEF("r", get_r, set_r),
     ::JSCFunctionListEntry JS_CGETSET_DEF("g", get_g, set_g),
     ::JSCFunctionListEntry JS_CGETSET_DEF("b", get_b, set_b),
@@ -246,7 +245,7 @@ static const auto PROTO_FUNCS = std::array{
     ::JSCFunctionListEntry JS_CFUNC_DEF("toString", 0, to_string),
 };
 
-static const auto STATIC_FUNCS = std::array{
+static const auto STATIC_FUNCS = std::array {
     ::JSCFunctionListEntry JS_CFUNC_DEF("fromHex", 1, from_hex),
 };
 
@@ -280,4 +279,17 @@ auto module(::JSContext *js) -> ::JSModuleDef * {
     return m;
 }
 
-} // namespace muen::plugins::math::color
+auto to_string(Color col) -> std::string {
+    return std::format("Color {{ r: {}, g: {}, b: {}, a: {} }}", col.r, col.g, col.b, col.a);
+}
+
+} // namespace muen::plugins::graphics::color
+
+namespace js {
+
+template<>
+auto try_as<::Color>(::JSContext *js, ::JSValueConst value) -> std::expected<::Color, ::JSValue> {
+    return muen::plugins::graphics::color::from_value(js, value);
+}
+
+} // namespace js

@@ -226,7 +226,7 @@ static const auto PROTO_FUNCS = std::array {
 };
 
 static const auto STATIC_FUNCS = std::array {
-// static const auto STATIC_FUNCS = std::vector<::JSCFunctionListEntry>{
+    // static const auto STATIC_FUNCS = std::vector<::JSCFunctionListEntry>{
     ::JSCFunctionListEntry JS_CFUNC_DEF("zero", 0, zero),
     ::JSCFunctionListEntry JS_CFUNC_DEF("fromVectors", 0, from_vectors),
 };
@@ -262,3 +262,12 @@ auto module(::JSContext *js) -> ::JSModuleDef * {
 }
 
 } // namespace muen::plugins::math::rectangle
+
+namespace js {
+
+template<>
+auto try_as<::Rectangle>(::JSContext *js, ::JSValueConst value) -> std::expected<::Rectangle, ::JSValue> {
+    return muen::plugins::math::rectangle::from_value(js, value);
+}
+
+} // namespace js

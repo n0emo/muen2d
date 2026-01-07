@@ -8,6 +8,7 @@ auto plugin(JSContext *js) -> EnginePlugin {
         .c_modules = {
             {"muen:Camera", camera::module(js)},
             {"muen:Color", color::module(js)},
+            {"muen:Font", font::module(js)},
             {"muen:NPatch", npatch::module(js)},
             {"muen:Texture", texture::module(js)},
             {"muen:graphics", module(js)},

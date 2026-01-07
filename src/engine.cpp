@@ -35,27 +35,47 @@ void report_error(JSContext *js, const std::string& message) {
     report_error(js, message, e);
 }
 
-auto create() -> Engine {
+auto create() -> Engine * {
+    SPDLOG_TRACE("Creating JS runtime");
     auto runtime = JS_NewRuntime();
+    assert(runtime != nullptr);
+
+    SPDLOG_TRACE("Creating JS context");
     auto js = JS_NewContext(runtime);
-    auto e = Engine {.runtime = runtime, .js = js};
-    JS_SetContextOpaque(js, &e);
+    assert(js != nullptr);
+
+    SPDLOG_TRACE("Creating engine");
+    auto e = new Engine {.runtime = runtime, .js = js};
+    assert(e != nullptr);
+    JS_SetContextOpaque(js, e);
+
     return e;
 }
 
 void destroy(Engine& self) {
-    JS_FreeContext(self.js);
-    JS_FreeRuntime(self.runtime);
+    if (self.js) {
+        SPDLOG_TRACE("Destroying JS context");
+        JS_FreeContext(self.js);
+    }
+
+    if (self.runtime) {
+        SPDLOG_TRACE("Destroying JS runtime");
+        JS_FreeRuntime(self.runtime);
+    }
 }
 
 auto module_loader(JSContext *ctx, const char *module_name, void *opaque) -> JSModuleDef * {
+    SPDLOG_DEBUG("Loading module {}", module_name);
+
     auto e = static_cast<Engine *>(opaque);
 
     if (auto cm = e->c_modules.find(module_name); cm != e->c_modules.end()) {
+        SPDLOG_DEBUG("Module {} resolved as builtin native module", module_name);
         return cm->second;
     } else {
         auto code = std::string {};
         if (auto jm = e->js_modules.find(module_name); jm != e->js_modules.end()) {
+            SPDLOG_DEBUG("Module {} resolved as builtin js module", module_name);
             code = jm->second;
         } else {
             // TODO: error handling
@@ -63,6 +83,7 @@ auto module_loader(JSContext *ctx, const char *module_name, void *opaque) -> JSM
             auto file = std::ifstream {path};
             auto buf = std::stringstream {};
             buf << file.rdbuf();
+            SPDLOG_DEBUG("Module {} resolved as game module", module_name);
             code = buf.str();
         }
 
@@ -78,6 +99,8 @@ auto module_loader(JSContext *ctx, const char *module_name, void *opaque) -> JSM
 }
 
 auto run(Engine& self, const char *path) -> int {
+    SPDLOG_DEBUG("Running engine with game {}", path);
+
     window::setup();
 
     self.root_path = std::string {path};
@@ -85,6 +108,7 @@ auto run(Engine& self, const char *path) -> int {
         self.root_path += '/';
     }
 
+    SPDLOG_TRACE("Registering plugins");
     register_plugin(self, plugins::console::plugin(self.js));
     register_plugin(self, plugins::math::plugin(self.js));
     register_plugin(self, plugins::window::plugin(self.js));
@@ -93,6 +117,7 @@ auto run(Engine& self, const char *path) -> int {
 
     JS_SetModuleLoaderFunc(self.runtime, nullptr, module_loader, &self);
 
+    SPDLOG_DEBUG("Loading plugins");
     for (const auto& callback : self.load_callbacks) {
         callback();
         // TODO: better error handling
@@ -103,19 +128,25 @@ auto run(Engine& self, const char *path) -> int {
     }
 
     defer({
+        SPDLOG_TRACE("Unloading plugins");
         for (const auto& callback : self.unload_callbacks) {
             callback();
         }
     });
 
+    SPDLOG_DEBUG("Loading game");
     const auto game_result = game::create(self.js, self.root_path);
     if (!game_result.has_value()) {
         report_error(self.js, "Exception occured while initializing game", game_result.error());
         return 1;
     }
     auto game = *game_result;
-    defer(game::destroy(game));
+    defer({
+        SPDLOG_TRACE("Destroying game");
+        game::destroy(game);
+    });
 
+    SPDLOG_DEBUG("Creating window");
     auto w = window::create(
         window::Config {
             .width = game.config.width,
@@ -124,17 +155,20 @@ auto run(Engine& self, const char *path) -> int {
             .title = game.config.title,
         }
     );
-    defer(window::close(w));
+    defer({
+        SPDLOG_TRACE("Closing window");
+        window::close(w);
+    });
 
-    // auto a = audio::create();
-    // defer(audio::close(a));
-
+    SPDLOG_DEBUG("Loading game");
     if (auto result = game::load(game); !result.has_value()) {
         report_error(self.js, "Exception occured while initializing game");
         return 1;
     }
 
+    SPDLOG_DEBUG("Running rame");
     while (!window::should_close(w)) {
+        SPDLOG_TRACE("Updating plugins");
         for (const auto& callback : self.update_callbacks) {
             callback();
             // TODO: better error handling
@@ -144,6 +178,7 @@ auto run(Engine& self, const char *path) -> int {
             }
         }
 
+        SPDLOG_TRACE("Updating game");
         if (auto result = game::update(game); !result.has_value()) {
             report_error(self.js, "Exception occured while updating game");
             return 1;
@@ -151,6 +186,7 @@ auto run(Engine& self, const char *path) -> int {
 
         window::begin_drawing(w);
 
+        SPDLOG_TRACE("Drawing plugins");
         for (const auto& callback : self.draw_callbacks) {
             callback();
             // TODO: better error handling
@@ -160,6 +196,7 @@ auto run(Engine& self, const char *path) -> int {
             }
         }
 
+        SPDLOG_TRACE("Drawing game");
         if (auto result = game::draw(game); !result.has_value()) {
             report_error(self.js, "Exception occured while rendering game");
             return 1;
@@ -199,7 +236,7 @@ auto register_plugin(Engine& self, const plugins::EnginePlugin& desc) -> void {
         self.draw_callbacks.emplace_back(desc.draw);
     }
 
-    spdlog::info("Registered `{}` plugin", desc.name);
+    SPDLOG_INFO("Registered `{}` plugin", desc.name);
 }
 
 auto from_js(JSContext *js) -> Engine& {

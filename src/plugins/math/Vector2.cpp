@@ -6,6 +6,7 @@
 
 #include <raylib.h>
 
+#include <jsutil.hpp>
 #include <defer.hpp>
 
 namespace muen::plugins::math::vector2 {
@@ -136,7 +137,7 @@ static auto set_y(::JSContext *js, ::JSValueConst this_val, ::JSValueConst val) 
 
 static auto to_string(::JSContext *js, JSValue this_val, int argc, JSValue *argv) -> ::JSValue {
     auto vec = pointer_from_value(js, this_val);
-    const auto str = std::format("Vector2 {{ x: {}, y: {} }}", vec->x, vec->y);
+    const auto str = to_string(*vec);
     return JS_NewString(js, str.c_str());
 }
 
@@ -180,4 +181,17 @@ auto module(::JSContext *js) -> ::JSModuleDef * {
     return m;
 }
 
+auto to_string(::Vector2 vec) -> std::string {
+    return std::format("Vector2 {{ x: {}, y: {} }}", vec.x, vec.y);
+}
+
 } // namespace muen::plugins::math::vector2
+
+namespace js {
+
+template<>
+auto try_as<::Vector2>(::JSContext *js, ::JSValueConst value) -> std::expected<::Vector2, ::JSValue> {
+    return muen::plugins::math::vector2::from_value(js, value);
+}
+
+} // namespace js

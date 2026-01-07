@@ -22,7 +22,7 @@ struct Engine {
     std::vector<std::function<auto()->void>> draw_callbacks {};
 };
 
-auto create() -> Engine;
+auto create() -> Engine *;
 auto destroy(Engine& window) -> void;
 auto run(Engine& self, const char *path) -> int;
 auto register_plugin(Engine& self, const plugins::EnginePlugin& desc) -> void;

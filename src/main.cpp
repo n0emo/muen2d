@@ -1,11 +1,16 @@
 #include <iostream>
 #include <span>
 
+#include <spdlog/spdlog.h>
+#include <spdlog/cfg/env.h>
+
 #include <engine.hpp>
 #include <defer.hpp>
 
+namespace engine = muen::engine;
+
 auto main(int argc, char **argv) -> int {
-    using namespace muen;
+    spdlog::cfg::load_env_levels();
 
     auto args = std::span(argv, size_t(argc));
 
@@ -14,7 +19,7 @@ auto main(int argc, char **argv) -> int {
         return 1;
     }
     auto e = engine::create();
-    defer(engine::destroy(e));
-    return engine::run(e, args[1]);
+    defer(engine::destroy(*e));
+    return engine::run(*e, args[1]);
     return 0;
 }
