@@ -5,6 +5,7 @@
 #include <format>
 
 #include <raylib.h>
+#include <spdlog/spdlog.h>
 
 #include <defer.hpp>
 
@@ -41,6 +42,7 @@ auto pointer_from_value(::JSContext *js, ::JSValueConst val) -> ::Texture * {
 }
 
 static auto constructor(JSContext *js, JSValue new_target, int argc, JSValue *argv) -> JSValue {
+    SPDLOG_TRACE("Texture.constructor/{}", argc);
     if (argc != 1) {
         return JS_ThrowTypeError(js, "Texture constructor expects 1 argument but %d were provided", argc);
     }
@@ -54,6 +56,7 @@ static auto constructor(JSContext *js, JSValue new_target, int argc, JSValue *ar
 
     const auto path = engine::resolve_path(e, filename);
 
+    SPDLOG_TRACE("LoadTexture({})", path);
     auto texture = ::LoadTexture(path.c_str());
 
     if (texture.id == 0) {

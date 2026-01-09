@@ -21,6 +21,9 @@ build:
 run game:
     xmake run muen {{ justfile_dir() / "examples" / game }}
 
+install-local: build
+    xmake install -o $HOME/.local/
+
 format:
     npm run format
     xmake format
