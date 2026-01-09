@@ -80,6 +80,10 @@ auto module_loader(JSContext *ctx, const char *module_name, void *opaque) -> JSM
         } else {
             // TODO: error handling
             auto path = resolve_path(*e, module_name);
+            if (!path.ends_with(".js")) {
+                path += ".js";
+            }
+            SPDLOG_TRACE("Loading module {}", path);
             auto file = std::ifstream {path};
             auto buf = std::stringstream {};
             buf << file.rdbuf();
@@ -156,6 +160,7 @@ auto run(Engine& self, const char *path) -> int {
         }
     );
     defer({
+        ;
         SPDLOG_TRACE("Closing window");
         window::close(w);
     });
@@ -176,6 +181,34 @@ auto run(Engine& self, const char *path) -> int {
                 report_error(self.js, "Exception occured while updating plugins");
                 return 1;
             }
+        }
+
+        if (IsKeyPressed(KEY_F5)) {
+            auto state = game::pre_reload(game);
+            if (!state) {
+                report_error(self.js, "Exception occured while pre-reloading game");
+                continue;
+            }
+            defer(JS_FreeValue(self.js, *state));
+
+            auto game_result = game::create(self.js, self.root_path);
+            if (!game_result) {
+                report_error(self.js, "Exception occured while reloading the game");
+                continue;
+            }
+
+            if (!game::load(*game_result)) {
+                report_error(self.js, "Exception occured while calling game load after reloading");
+                continue;
+            }
+
+            if (auto result = game::post_reload(*game_result, *state); !result) {
+                report_error(self.js, "Exception occured while post-reloading game");
+                continue;
+            }
+
+            game::destroy(game);
+            game = *game_result;
         }
 
         SPDLOG_TRACE("Updating game");
