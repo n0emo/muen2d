@@ -1,6 +1,9 @@
 #include "./audio.hpp"
 
+#include <cstring>
+#include <array>
 #include <algorithm>
+#include <expected>
 
 namespace muen::engine::audio::music {
 

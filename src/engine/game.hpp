@@ -22,6 +22,8 @@ struct Game {
     JSValue load;
     JSValue update;
     JSValue draw;
+    JSValue pre_reload;
+    JSValue post_reload;
 };
 
 auto create(JSContext *js, std::string path) -> std::expected<Game, JSValue>;
@@ -29,5 +31,7 @@ auto destroy(Game& self) -> void;
 auto load(Game& self) -> std::expected<std::monostate, JSValue>;
 auto update(Game& self) -> std::expected<std::monostate, JSValue>;
 auto draw(Game& self) -> std::expected<std::monostate, JSValue>;
+auto pre_reload(Game& self) -> std::expected<JSValue, JSValue>;
+auto post_reload(Game& self, JSValue state) -> std::expected<JSValue, JSValue>;
 
 } // namespace muen::game

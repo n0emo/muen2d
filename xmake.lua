@@ -13,6 +13,11 @@ add_requires("spdlog 1.16.0", {
 set_languages({"c++23", "c11"})
 set_warnings("all", "extra")
 
+if is_plat("windows") then
+    add_defines("_CRT_SECURE_NO_WARNINGS")
+end
+
+
 target("muen")
     set_kind("binary")
     add_files(

@@ -521,7 +521,7 @@ static auto text_pro(JSContext *js, JSValueConst this_val, int argc, JSValueCons
     return JS_DupValue(js, this_val);
 }
 
-static const auto funcs = std::array {
+static const auto FUNCS = std::array {
     JSCFunctionListEntry JS_CFUNC_DEF("clear", 1, clear),
     JSCFunctionListEntry JS_CFUNC_DEF("circle", 4, circle_simple),
     JSCFunctionListEntry JS_CFUNC_DEF("rectangle", 5, rectangle_simple),
@@ -543,7 +543,7 @@ static const auto funcs = std::array {
 auto module(JSContext *js) -> JSModuleDef * {
     auto m = JS_NewCModule(js, "muen:graphics", [](auto js, auto m) -> int {
         auto o = JS_NewObject(js);
-        JS_SetPropertyFunctionList(js, o, funcs.data(), funcs.size());
+        JS_SetPropertyFunctionList(js, o, FUNCS.data(), int{FUNCS.size()});
         JS_SetModuleExport(js, m, "default", o);
 
         return 0;

@@ -1,9 +1,11 @@
 #include "./game.hpp"
 
+#include <array>
 #include <cerrno>
 #include <cstring>
-#include <sstream>
 #include <fstream>
+#include <span>
+#include <sstream>
 
 #include <spdlog/spdlog.h>
 
@@ -42,7 +44,7 @@ auto create(JSContext *js, std::string path) -> std::expected<Game, JSValue> {
     auto game_buf = std::stringstream {};
     try {
         game_buf << game_file.rdbuf();
-    } catch (std::exception& e) {
+    } catch (std::exception&) {
         return std::unexpected(JS_ThrowInternalError(js, "Could not load game file: %s", strerror(errno)));
     }
 
@@ -100,6 +102,18 @@ auto create(JSContext *js, std::string path) -> std::expected<Game, JSValue> {
         return std::unexpected(JS_ThrowInternalError(js, "Game draw must be function"));
     }
 
+    auto pre_reload = JS_GetPropertyStr(js, ns, "preReload");
+    if (!JS_IsUndefined(pre_reload) && !JS_IsNull(pre_reload) && !JS_IsFunction(js, pre_reload)) {
+        JS_FreeValue(js, pre_reload);
+        return std::unexpected(JS_ThrowInternalError(js, "Game preReload must be function"));
+    }
+
+    auto post_reload = JS_GetPropertyStr(js, ns, "postReload");
+    if (!JS_IsUndefined(post_reload) && !JS_IsNull(post_reload) && !JS_IsFunction(js, post_reload)) {
+        JS_FreeValue(js, post_reload);
+        return std::unexpected(JS_ThrowInternalError(js, "Game postReload must be function"));
+    }
+
     return Game {
         .js = js,
         .config = *config,
@@ -107,6 +121,8 @@ auto create(JSContext *js, std::string path) -> std::expected<Game, JSValue> {
         .load = load,
         .update = update,
         .draw = draw,
+        .pre_reload = pre_reload,
+        .post_reload = post_reload,
     };
 }
 
@@ -114,32 +130,59 @@ auto destroy(Game &self) -> void {
     ::JS_FreeValue(self.js, self.load);
     ::JS_FreeValue(self.js, self.update);
     ::JS_FreeValue(self.js, self.draw);
+    ::JS_FreeValue(self.js, self.pre_reload);
+    ::JS_FreeValue(self.js, self.post_reload);
 }
 
-auto safe_call(Game &self, JSValue func) -> std::expected<std::monostate, JSValue> {
+auto safe_call(Game &self, JSValue func, std::span<JSValue> args = {}) -> std::expected<JSValue, JSValue> {
     if (!JS_IsFunction(self.js, func)) {
-        return std::monostate{};
+        return JS_UNDEFINED;
     }
 
-    auto ret = JS_Call(self.js, func, JS_UNDEFINED, 0, nullptr);
+    auto length = args.size();
+    auto argv = length  == 0 ? nullptr : args.data();
+    auto ret = JS_Call(self.js, func, JS_UNDEFINED, int(length), argv);
     if (JS_IsException(ret)) {
         return std::unexpected(ret);
     }
-    defer(JS_FreeValue(self.js, ret));
 
-    return std::monostate{};
+    return ret;
 }
 
 auto load(Game &self) -> std::expected<std::monostate, JSValue> {
-    return safe_call(self, self.load);
+    if (auto ret = safe_call(self, self.load)) {
+        JS_FreeValue(self.js, *ret);
+        return std::monostate{};
+    } else {
+        return std::unexpected(ret.error());
+    }
 }
 
 auto update(Game &self) -> std::expected<std::monostate, JSValue> {
-    return safe_call(self, self.update);
+    if (auto ret = safe_call(self, self.update)) {
+        JS_FreeValue(self.js, *ret);
+        return std::monostate{};
+    } else {
+        return std::unexpected(ret.error());
+    }
 }
 
 auto draw(Game &self) -> std::expected<std::monostate, JSValue> {
-    return safe_call(self, self.draw);
+    if (auto ret = safe_call(self, self.draw)) {
+        JS_FreeValue(self.js, *ret);
+        return std::monostate{};
+    } else {
+        return std::unexpected(ret.error());
+    }
+}
+
+auto pre_reload(Game &self) -> std::expected<JSValue, JSValue> {
+    return safe_call(self, self.pre_reload);
+}
+
+auto post_reload(Game &self, JSValue state) -> std::expected<JSValue, JSValue> {
+    auto args = std::array{state};
+    return safe_call(self, self.post_reload, args);
 }
 
 } // namespace muen::game

@@ -1,5 +1,6 @@
 #include <plugins/window.hpp>
 
+#include <array>
 #include <cassert>
 #include <unordered_map>
 
@@ -225,7 +226,7 @@ auto module(::JSContext *js) -> ::JSModuleDef * {
     auto m = ::JS_NewCModule(js, "muen:mouse", [](auto js, auto m) -> int {
         auto o = ::JS_NewObject(js);
 
-        ::JS_SetPropertyFunctionList(js, o, FUNCS.data(), FUNCS.size());
+        ::JS_SetPropertyFunctionList(js, o, FUNCS.data(), int{FUNCS.size()});
 
         ::JS_SetModuleExport(js, m, "mouse", JS_DupValue(js, o));
         ::JS_SetModuleExport(js, m, "default", o);

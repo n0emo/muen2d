@@ -9,7 +9,7 @@
 
 namespace engine = muen::engine;
 
-auto main(int argc, char **argv) -> int {
+auto main(int argc, char **argv) noexcept -> int try {
     spdlog::cfg::load_env_levels();
 
     auto args = std::span(argv, size_t(argc));
@@ -22,4 +22,6 @@ auto main(int argc, char **argv) -> int {
     defer(engine::destroy(*e));
     return engine::run(*e, args[1]);
     return 0;
+} catch (std::exception& e) {
+    spdlog::error("{}", e.what());
 }

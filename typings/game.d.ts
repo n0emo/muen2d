@@ -53,3 +53,22 @@ export function update(): void;
  * @optional
  */
 export function draw(): void;
+
+/**
+ * Called before game reloading. This function returns JS value that later will
+ * be passed to {@link postReload}
+ *
+ * @event
+ * @optional
+ */
+export function preReload(): unknown;
+
+/**
+ * Called after game reloading
+ *
+ * @param state JS value returned by {@link preReload}
+ *
+ * @event
+ * @optional
+ */
+export function postReload(state: unknown): void;

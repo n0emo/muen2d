@@ -42,7 +42,7 @@ export interface Graphics {
     ): Graphics;
 
     text(text: string, x: number, y: number, fontSize: number, color: BasicColor): Graphics;
-    textPro(text: Text);
+    textPro(text: Text): Graphics;
 }
 
 export declare const graphics: Graphics;

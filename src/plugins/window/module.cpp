@@ -23,7 +23,7 @@ static auto get_height(::JSContext *js, ::JSValueConst) -> ::JSValue {
     return ::JS_NewFloat64(js, double(::GetScreenHeight()));
 }
 
-const static ::std::array funcs = {
+const static auto funcs = std::array{
     ::JSCFunctionListEntry JS_CGETSET_DEF("dt", get_dt, nullptr),
     ::JSCFunctionListEntry JS_CGETSET_DEF("time", get_time, nullptr),
     ::JSCFunctionListEntry JS_CGETSET_DEF("width", get_width, nullptr),
@@ -34,7 +34,7 @@ auto screen_module(::JSContext *js) -> ::JSModuleDef * {
     auto m = ::JS_NewCModule(js, "muen:screen", [](auto js, auto m) -> int {
         auto o = ::JS_NewObject(js);
 
-        ::JS_SetPropertyFunctionList(js, o, funcs.data(), funcs.size());
+        ::JS_SetPropertyFunctionList(js, o, funcs.data(), int{funcs.size()});
         ::JS_SetModuleExport(js, m, "default", o);
 
         return 0;

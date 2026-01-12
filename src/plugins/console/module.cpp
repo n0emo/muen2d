@@ -60,7 +60,7 @@ const static auto FUNCS = std::array {
 auto module(JSContext *js) -> JSModuleDef * {
     auto m = JS_NewCModule(js, "muen:console", [](auto js, auto m) -> int {
         auto o = JS_NewObject(js);
-        JS_SetPropertyFunctionList(js, o, FUNCS.data(), FUNCS.size());
+        JS_SetPropertyFunctionList(js, o, FUNCS.data(), int{FUNCS.size()});
         JS_SetModuleExport(js, m, "default", o);
 
         return 0;
