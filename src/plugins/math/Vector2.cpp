@@ -6,6 +6,7 @@
 
 #include <fmt/format.h>
 #include <raylib.h>
+#include <raymath.h>
 
 #include <defer.hpp>
 
@@ -88,6 +89,13 @@ static auto zero(JSContext *js, JSValueConst, int, JSValueConst *) -> JSValue {
     return obj;
 }
 
+static auto one(JSContext *js, JSValueConst, int, JSValueConst *) -> JSValue {
+    auto obj = JS_NewObjectClass(js, js::class_id<&VECTOR2>(js));
+    auto vec = owner<Vector2 *>(new Vector2 {.x = 1, .y = 1});
+    JS_SetOpaque(obj, vec);
+    return obj;
+}
+
 static auto get_x(JSContext *js, JSValueConst this_val) -> JSValue {
     auto v = try_into<Vector2 *>(js::borrow(js, this_val));
     if (!v) return jsthrow(v.error());
@@ -98,6 +106,18 @@ static auto get_y(JSContext *js, JSValueConst this_val) -> JSValue {
     auto v = try_into<Vector2 *>(js::borrow(js, this_val));
     if (!v) return jsthrow(v.error());
     return JS_NewFloat64(js, (*v)->y);
+}
+
+static auto get_length(JSContext *js, JSValueConst this_val) -> JSValue {
+    auto v = try_into<Vector2 *>(js::borrow(js, this_val));
+    if (!v) return jsthrow(v.error());
+    return JS_NewFloat64(js, Vector2Length(**v));
+}
+
+static auto get_length_sqr(JSContext *js, JSValueConst this_val) -> JSValue {
+    auto v = try_into<Vector2 *>(js::borrow(js, this_val));
+    if (!v) return jsthrow(v.error());
+    return JS_NewFloat64(js, Vector2LengthSqr(**v));
 }
 
 static auto set_x(JSContext *js, JSValueConst this_val, JSValueConst val) -> JSValue {
@@ -118,21 +138,63 @@ static auto set_y(JSContext *js, JSValueConst this_val, JSValueConst val) -> JSV
     return JS_UNDEFINED;
 }
 
+static auto add(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {
+    auto this_vec = try_into<Vector2 *>(js::borrow(js, this_val));
+    if (!this_vec) return jsthrow(this_vec.error());
+
+    auto vec2 = Vector2 {};
+    if (argc == 1) {
+        const auto args = js::unpack_args<Vector2>(js, argc, argv);
+        if (!args) return jsthrow(args.error());
+
+        const auto [v] = *args;
+        vec2 = v;
+    } else if (argc == 2) {
+        const auto args = js::unpack_args<float, float>(js, argc, argv);
+        if (!args) return jsthrow(args.error());
+
+        const auto [x, y] = *args;
+        vec2 = Vector2 {.x = x, .y = y};
+    } else {
+        return JS_ThrowRangeError(js, "No matching overload for %d arguments", argc);
+    }
+
+    **this_vec += vec2;
+
+    return JS_DupValue(js, this_val);
+}
+
+static auto add_num(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {
+    auto this_vec = try_into<Vector2*>(js::borrow(js, this_val));
+    if (!this_vec) return jsthrow(this_vec.error());
+    const auto args = js::unpack_args<float>(js, argc, argv);
+    if (!args) return jsthrow(args.error());
+    const auto [num] = *args;
+    (*this_vec)->x += num;
+    (*this_vec)->y += num;
+    return JS_DupValue(js, this_val);
+}
+
 static auto object_to_string(JSContext *js, JSValueConst this_val, int, JSValueConst *) -> JSValue {
     auto vec = js::try_into<Vector2>(js::borrow(js, this_val));
     if (!vec) return jsthrow(vec.error());
-    const auto str = to_string(*vec);
+    auto str = fmt::format("{}", *vec);
     return JS_NewString(js, str.c_str());
 }
 
 static const auto PROTO_FUNCS = std::array {
     JSCFunctionListEntry JS_CGETSET_DEF("x", get_x, set_x),
     JSCFunctionListEntry JS_CGETSET_DEF("y", get_y, set_y),
+    JSCFunctionListEntry JS_CGETSET_DEF("length", get_length, nullptr),
+    JSCFunctionListEntry JS_CGETSET_DEF("lengthSqr", get_length_sqr, nullptr),
+    JSCFunctionListEntry JS_CFUNC_DEF("add", 1, add),
+    JSCFunctionListEntry JS_CFUNC_DEF("addNum", 2, add_num),
     JSCFunctionListEntry JS_CFUNC_DEF("toString", 0, object_to_string),
 };
 
 static const auto STATIC_FUNCS = std::array {
     JSCFunctionListEntry JS_CFUNC_DEF("zero", 0, zero),
+    JSCFunctionListEntry JS_CFUNC_DEF("one", 0, one),
 };
 
 extern const JSClassDef VECTOR2 = {
