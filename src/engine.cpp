@@ -20,11 +20,13 @@ void report_error(JSContext *js, const std::string& message, JSValue e) {
     defer(JS_FreeValue(js, e));
 
     const char *msg = JS_ToCString(js, e);
+    assert(msg != nullptr);
     defer(JS_FreeCString(js, msg));
 
     const auto stack = JS_GetPropertyStr(js, e, "stack");
     defer(JS_FreeValue(js, stack));
     const auto stack_str = JS_ToCString(js, stack);
+    assert(stack_str != nullptr);
     defer(JS_FreeCString(js, stack_str));
 
     spdlog::error("{}: {}\n{}", message, msg, stack_str);
@@ -230,8 +232,8 @@ auto run(Engine& self, const char *path) -> int {
         }
 
         SPDLOG_TRACE("Drawing game");
-        if (auto result = game::draw(game); !result.has_value()) {
-            report_error(self.js, "Exception occured while rendering game");
+        if (auto result = game::draw(game); !result) {
+            report_error(self.js, "Exception occured while rendering game", result.error());
             return 1;
         }
 

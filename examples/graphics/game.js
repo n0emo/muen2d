@@ -14,6 +14,8 @@ export function draw() {
     graphics.rectangleRec(new Rectangle(150, 100, 30, 30), Color.fromHex("#ff9ba5ff"));
     graphics.rectanglePro(new Rectangle(210, 100, 30, 30), new Vector2(10, 10), 45, Color.fromHex("#ffc787ff"));
 
+    graphics.circle(200, 200, 10, Color.fromHex("#ff0000"));
+
     // TODO: this should give a runtime error actually
     // graphics.rectangle(50, 100, 30, 30, 40, Color.fromHex("#c49bffff"));
 }

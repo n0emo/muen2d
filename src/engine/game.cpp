@@ -142,8 +142,8 @@ auto safe_call(Game &self, JSValue func, std::span<JSValue> args = {}) -> std::e
     auto length = args.size();
     auto argv = length  == 0 ? nullptr : args.data();
     auto ret = JS_Call(self.js, func, JS_UNDEFINED, int(length), argv);
-    if (JS_IsException(ret)) {
-        return std::unexpected(ret);
+    if (JS_HasException(self.js)) {
+        return std::unexpected(JS_GetException(self.js));
     }
 
     return ret;

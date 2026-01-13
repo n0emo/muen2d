@@ -12,23 +12,11 @@
 #include <engine.hpp>
 #include <plugins/math.hpp>
 
-namespace muen::plugins::graphics::texture {
+namespace js {
 
-auto class_id(JSRuntime *rt) -> ::JSClassID {
-    static const auto id = [](auto rt) -> ::JSClassID {
-        auto id = ::JSClassID {};
-        ::JS_NewClassID(rt, &id);
-        return id;
-    }(rt);
-    return id;
-}
-
-auto class_id(JSContext *js) -> ::JSClassID {
-    return class_id(JS_GetRuntime(js));
-}
-
-auto from_value(::JSContext *js, ::JSValueConst val) -> std::expected<::Texture, ::JSValue> {
-    const auto id = class_id(js);
+template<>
+auto try_as<Texture>(JSContext *js, JSValueConst val) -> std::expected<Texture, JSValue> {
+    const auto id = class_id<&muen::plugins::graphics::texture::CLASS>(js);
     if (JS_GetClassID(val) == id) {
         const auto ptr = static_cast<::Texture *>(JS_GetOpaque(val, id));
         return *ptr;
@@ -37,42 +25,90 @@ auto from_value(::JSContext *js, ::JSValueConst val) -> std::expected<::Texture,
     return std::unexpected(JS_ThrowTypeError(js, "Expected Texture object"));
 }
 
-auto pointer_from_value(::JSContext *js, ::JSValueConst val) -> ::Texture * {
-    return static_cast<Texture *>(JS_GetOpaque(val, class_id(js)));
+} // namespace js
+
+namespace muen::plugins::graphics::texture {
+
+static auto constructor(JSContext *js, JSValue new_target, int argc, JSValue *argv) -> JSValue;
+static auto finalizer(JSRuntime *rt, JSValue val) -> void;
+static auto get_source(JSContext *js, JSValueConst this_val) -> JSValue;
+static auto to_string(JSContext *js, JSValueConst this_val, int, JSValueConst *) -> JSValue;
+
+static const auto PROTO_FUNCS = std::array {
+    JSCFunctionListEntry JS_CGETSET_DEF("source", get_source, nullptr),
+    JSCFunctionListEntry JS_CFUNC_DEF("toString", 0, to_string),
+};
+
+extern const JSClassDef CLASS = {
+    .class_name = "Texture",
+    .finalizer = finalizer,
+    .gc_mark = nullptr,
+    .call = nullptr,
+    .exotic = nullptr,
+};
+
+auto module(JSContext *js) -> JSModuleDef * {
+    auto m = JS_NewCModule(js, "muen:Texture", [](auto js, auto m) -> int {
+        JS_NewClass(JS_GetRuntime(js), js::class_id<&CLASS>(js), &CLASS);
+
+        JSValue proto = JS_NewObject(js);
+        JS_SetPropertyFunctionList(js, proto, PROTO_FUNCS.data(), int {PROTO_FUNCS.size()});
+        JS_SetClassProto(js, js::class_id<&CLASS>(js), proto);
+
+        JSValue ctor = JS_NewCFunction2(js, constructor, "Texture", 1, JS_CFUNC_constructor, 0);
+        JS_SetConstructor(js, ctor, proto);
+
+        JS_SetModuleExport(js, m, "default", ctor);
+
+        return 0;
+    });
+
+    JS_AddModuleExport(js, m, "default");
+
+    return m;
+}
+
+auto to_string(Texture tex) -> std::string {
+    return std::format(
+        "Texture {{ id: {}, width: {}, height: {}, mipmaps: {}, format: {} }}",
+        tex.id,
+        tex.width,
+        tex.height,
+        tex.mipmaps,
+        tex.format
+    );
+}
+
+auto pointer_from_value(JSContext *js, JSValueConst val) -> Texture * {
+    return static_cast<Texture *>(JS_GetOpaque(val, js::class_id<&CLASS>(js)));
 }
 
 static auto constructor(JSContext *js, JSValue new_target, int argc, JSValue *argv) -> JSValue {
     SPDLOG_TRACE("Texture.constructor/{}", argc);
-    if (argc != 1) {
-        return JS_ThrowTypeError(js, "Texture constructor expects 1 argument but %d were provided", argc);
-    }
+    const auto args = js::unpack_args<std::string>(js, argc, argv);
+    if (!args) return JS_Throw(js, args.error());
+    const auto [filename] = *args;
 
     auto e = engine::from_js(js);
-    const char *filename = ::JS_ToCString(js, argv[0]);
-    if (!filename) {
-        return ::JS_ThrowTypeError(js, "Invalid filename");
-    }
-    defer(::JS_FreeCString(js, filename));
-
     const auto path = engine::resolve_path(e, filename);
 
     SPDLOG_TRACE("LoadTexture({})", path);
-    auto texture = ::LoadTexture(path.c_str());
+    auto texture = LoadTexture(path.c_str());
 
     if (texture.id == 0) {
-        return ::JS_ThrowInternalError(js, "Could not load texture: %s", filename);
+        return JS_ThrowInternalError(js, "Could not load texture: %s", filename.c_str());
     }
 
     auto proto = JS_GetPropertyStr(js, new_target, "prototype");
     if (JS_IsException(proto)) {
-        ::UnloadTexture(texture);
+        UnloadTexture(texture);
         return proto;
     }
     defer(JS_FreeValue(js, proto));
 
-    auto obj = JS_NewObjectProtoClass(js, proto, class_id(js));
+    auto obj = JS_NewObjectProtoClass(js, proto, js::class_id<&CLASS>(js));
     if (JS_HasException(js)) {
-        ::UnloadTexture(texture);
+        UnloadTexture(texture);
         JS_FreeValue(js, obj);
         return JS_GetException(js);
     }
@@ -82,19 +118,18 @@ static auto constructor(JSContext *js, JSValue new_target, int argc, JSValue *ar
     return obj;
 }
 
-static auto finalizer(JSRuntime *rt, JSValue val) {
-    auto ptr = static_cast<Texture *>(JS_GetOpaque(val, class_id(rt)));
+static auto finalizer(JSRuntime *rt, JSValue val) -> void {
+    auto ptr = static_cast<Texture *>(JS_GetOpaque(val, js::class_id<&CLASS>(rt)));
     if (ptr) {
-        ::UnloadTexture(*ptr);
+        UnloadTexture(*ptr);
         delete ptr;
     }
 }
 
-static auto get_source(::JSContext *js, ::JSValueConst this_val) -> ::JSValue {
-    auto tex = pointer_from_value(js, this_val);
-
-    auto obj = JS_NewObjectClass(js, math::rectangle::class_id(js));
-    auto rec = new Rectangle {
+static auto get_source(JSContext *js, JSValueConst this_val) -> JSValue {
+    const auto tex = pointer_from_value(js, this_val);
+    const auto obj = JS_NewObjectClass(js, math::rectangle::class_id(js));
+    const auto rec = new Rectangle {
         .x = 0.0f,
         .y = 0.0f,
         .width = static_cast<float>(tex->width),
@@ -104,51 +139,10 @@ static auto get_source(::JSContext *js, ::JSValueConst this_val) -> ::JSValue {
     return obj;
 }
 
-static auto to_string(::JSContext *js, JSValueConst this_val, int, JSValueConst *) -> ::JSValue {
-    auto tex = pointer_from_value(js, this_val);
-    const auto str = std::format(
-        "Texture {{ id: {}, width: {}, height: {}, mipmaps: {}, format: {} }}",
-        tex->id,
-        tex->width,
-        tex->height,
-        tex->mipmaps,
-        tex->format
-    );
+static auto to_string(JSContext *js, JSValueConst this_val, int, JSValueConst *) -> JSValue {
+    const auto tex = pointer_from_value(js, this_val);
+    const auto str = to_string(*tex);
     return JS_NewString(js, str.c_str());
-}
-
-static const auto PROTO_FUNCS = std::array {
-    ::JSCFunctionListEntry JS_CGETSET_DEF("source", get_source, nullptr),
-    ::JSCFunctionListEntry JS_CFUNC_DEF("toString", 0, to_string),
-};
-
-static const auto TEXTURE_CLASS = ::JSClassDef {
-    .class_name = "Texture",
-    .finalizer = finalizer,
-    .gc_mark = nullptr,
-    .call = nullptr,
-    .exotic = nullptr,
-};
-
-auto module(::JSContext *js) -> ::JSModuleDef * {
-    auto m = ::JS_NewCModule(js, "muen:Texture", [](auto js, auto m) -> int {
-        ::JS_NewClass(::JS_GetRuntime(js), class_id(js), &TEXTURE_CLASS);
-
-        ::JSValue proto = ::JS_NewObject(js);
-        ::JS_SetPropertyFunctionList(js, proto, PROTO_FUNCS.data(), int{PROTO_FUNCS.size()});
-        ::JS_SetClassProto(js, class_id(js), proto);
-
-        ::JSValue ctor = ::JS_NewCFunction2(js, constructor, "Texture", 1, ::JS_CFUNC_constructor, 0);
-        ::JS_SetConstructor(js, ctor, proto);
-
-        ::JS_SetModuleExport(js, m, "default", ctor);
-
-        return 0;
-    });
-
-    ::JS_AddModuleExport(js, m, "default");
-
-    return m;
 }
 
 } // namespace muen::plugins::graphics::texture

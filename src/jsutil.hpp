@@ -5,6 +5,7 @@
 #include <type_traits>
 #include <optional>
 #include <vector>
+#include <tuple>
 
 #include <spdlog/spdlog.h>
 #include <quickjs.h>
@@ -69,6 +70,18 @@ concept is_optional = requires(T a, typename T::value_type v) {
 static_assert(is_optional<std::optional<int>>);
 static_assert(!is_optional<std::string>);
 
+template<auto T>
+auto class_id(JSRuntime *rt) -> ::JSClassID {
+    static auto id = JSClassID {0};
+    JS_NewClassID(rt, &id);
+    return id;
+}
+
+template<auto T>
+auto class_id(JSContext *js) -> ::JSClassID {
+    return class_id<T>(JS_GetRuntime(js));
+}
+
 auto to_string(::JSContext *js, ::JSValueConst value) -> std::string;
 
 template<typename T>
@@ -112,8 +125,7 @@ auto try_as(::JSContext *js, ::JSValueConst value) -> std::expected<T, ::JSValue
     } else if constexpr (std::is_integral_v<T> || std::is_floating_point_v<T>) {
         SPDLOG_TRACE("Converting JS value to numeric");
         auto num = try_as<double>(js, value);
-        if (!num)
-            return std::unexpected(num.error());
+        if (!num) return std::unexpected(num.error());
         return static_cast<T>(*num);
 
     } else if constexpr (std::is_same_v<T, std::string>) {
@@ -197,7 +209,36 @@ auto try_get_property(::JSContext *js, ::JSValueConst value, const std::string& 
     return try_into<T>(js, prop);
 }
 
-template<typename T>
-concept TryAsCompiles = requires(::JSContext *js, ::JSValueConst value) { try_as<T>(js, value); };
+template<typename... Ts, size_t... Is>
+auto unpack_args_impl(JSContext *js, JSValueConst *argv, std::index_sequence<Is...>) -> std::tuple<Ts...> {
+    return std::tuple<Ts...> {try_as<Ts>(js, argv[Is]).value()...};
+}
+
+template<typename... Ts>
+auto unpack_args(JSContext *js, int argc, JSValueConst *argv) -> std::expected<std::tuple<Ts...>, JSValue> {
+    constexpr size_t N = sizeof...(Ts);
+
+    if (argc < int {N}) {
+        return std::unexpected(JS_NewRangeError(js, "Expected %zu arguments, got %d", N, argc));
+    }
+
+    return [&]<size_t... Is>(std::index_sequence<Is...>) -> auto {
+        using Tuple = std::tuple<Ts...>;
+        std::expected<Tuple, JSValue> result = std::make_tuple(Ts {}...);
+
+        auto try_all = [&]() -> std::expected<Tuple, JSValue> {
+            auto args = std::make_tuple(try_as<std::tuple_element_t<Is, Tuple>>(js, argv[Is])...);
+
+            if ((... || !std::get<Is>(args).has_value())) {
+                JSValue err;
+                ((std::get<Is>(args).has_value() ? false : (err = std::get<Is>(args).error(), true)) || ...);
+                return std::unexpected(err);
+            }
+            return std::make_tuple(std::move(*std::get<Is>(args))...);
+        };
+
+        return try_all();
+    }(std::make_index_sequence<N> {});
+}
 
 } // namespace js
