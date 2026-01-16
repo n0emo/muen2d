@@ -9,8 +9,11 @@
 #include <raylib.h>
 
 #include <defer.hpp>
+#include <error.hpp>
 
 namespace js {
+
+using muen::Err;
 
 template<>
 auto try_as<Color>(JSContext *js, JSValueConst val) -> std::expected<Color, JSValue> {
@@ -25,13 +28,13 @@ auto try_as<Color>(JSContext *js, JSValueConst val) -> std::expected<Color, JSVa
     auto c = Color {};
 
     if (auto r = try_get_property<unsigned char>(js, val, "r")) c.r = *r;
-    else return std::unexpected(r.error());
+    else return Err(r.error());
     if (auto g = try_get_property<unsigned char>(js, val, "g")) c.g = *g;
-    else return std::unexpected(g.error());
+    else return Err(g.error());
     if (auto b = try_get_property<unsigned char>(js, val, "b")) c.b = *b;
-    else return std::unexpected(b.error());
+    else return Err(b.error());
     if (auto a = try_get_property<unsigned char>(js, val, "a")) c.a = *a;
-    else return std::unexpected(a.error());
+    else return Err(a.error());
 
     return c;
 }

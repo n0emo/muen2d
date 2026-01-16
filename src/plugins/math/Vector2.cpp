@@ -47,7 +47,7 @@ auto from_value(::JSContext *js, ::JSValueConst val) -> std::expected<::Vector2,
     v.y = static_cast<float>(temp);
 
     if (JS_HasException(js)) {
-        return std::unexpected(JS_GetException(js));
+        return Err(JS_GetException(js));
     } else {
         return v;
     }

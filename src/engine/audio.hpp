@@ -1,10 +1,11 @@
 #pragma once
 
 #include <set>
-#include <expected>
 #include <string>
 
 #include <raylib.h>
+
+#include <error.hpp>
 
 namespace muen::engine::audio {
 
@@ -16,7 +17,7 @@ namespace music {
         float pan = 0.5f;
     };
 
-    auto load(const std::string& path) -> std::expected<Music *, std::string>;
+    auto load(const std::string& path) -> Result<Music *>;
     auto unload(Music *self) -> void;
     auto update(Music& self) -> void;
     auto play(Music& self) -> void;
@@ -43,7 +44,7 @@ namespace sound {
         float pan = 0.5f;
     };
 
-    auto load(const std::string& path) -> std::expected<Sound *, std::string>;
+    auto load(const std::string& path) -> Result<Sound *>;
     auto unload(Sound *self) -> void;
     auto play(Sound& self) -> void;
     auto stop(Sound& self) -> void;

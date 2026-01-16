@@ -6,6 +6,8 @@
 
 namespace js {
 
+using namespace muen;
+
 template<>
 auto try_as<RenderTexture>(JSContext *js, JSValueConst value) -> std::expected<RenderTexture, JSValue> {
     auto ptr = static_cast<RenderTexture *>(
@@ -13,7 +15,7 @@ auto try_as<RenderTexture>(JSContext *js, JSValueConst value) -> std::expected<R
     );
 
     if (ptr == nullptr) {
-        return std::unexpected(JS_NewTypeError(js, "Value is not a RenderTexture instance"));
+        return Err(JS_NewTypeError(js, "Value is not a RenderTexture instance"));
     }
 
     return *ptr;

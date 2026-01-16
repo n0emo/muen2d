@@ -14,8 +14,8 @@ auto setup() -> void {
     SetTraceLogLevel(LOG_WARNING);
 }
 
-auto create(Config config) -> Window {
-    InitWindow(config.width, config.height, config.title);
+auto create(const Config &config) -> Window {
+    InitWindow(config.width, config.height, config.title.c_str());
     SetTargetFPS(config.fps);
     return Window {.config = config};
 }

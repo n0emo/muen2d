@@ -22,6 +22,7 @@ target("muen")
     set_kind("binary")
     add_files(
         "src/engine.cpp",
+        "src/error.cpp",
         "src/jsutil.cpp",
         "src/main.cpp",
         "src/plugins/*.cpp"

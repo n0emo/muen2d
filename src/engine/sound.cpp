@@ -4,10 +4,10 @@
 
 namespace muen::engine::audio::sound {
 
-auto load(const std::string& path) -> std::expected<Sound*, std::string> {
+auto load(const std::string& path) -> Result<Sound*> {
     const auto raylib_sound = ::LoadSound(path.c_str());
     if (!::IsSoundValid(raylib_sound)) {
-        return std::unexpected("Error loading sound");
+        return Err(error::create("Error loading sound"));
     }
 
     const auto sound = Sound {.sound = raylib_sound};

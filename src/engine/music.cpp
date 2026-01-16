@@ -1,16 +1,14 @@
 #include "./audio.hpp"
 
 #include <cstring>
-#include <array>
 #include <algorithm>
-#include <expected>
 
 namespace muen::engine::audio::music {
 
-auto load(const std::string& path) -> std::expected<Music *, std::string> {
+auto load(const std::string& path) -> Result<Music *> {
     const auto raylib_music = ::LoadMusicStream(path.c_str());
     if (!::IsMusicValid(raylib_music)) {
-        return std::unexpected("Error loading music");
+        return Err(error::create("Error loading music"));
     }
 
     const auto music = Music {.music = raylib_music};

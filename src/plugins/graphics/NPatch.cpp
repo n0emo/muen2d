@@ -11,6 +11,8 @@
 
 namespace js {
 
+using namespace muen;
+
 template<>
 auto try_as<NPatchInfo>(JSContext *js, JSValueConst val) -> std::expected<NPatchInfo, JSValue> {
     using namespace muen::plugins;
@@ -23,17 +25,17 @@ auto try_as<NPatchInfo>(JSContext *js, JSValueConst val) -> std::expected<NPatch
     auto np = NPatchInfo {};
 
     if (auto source = try_get_property<Rectangle>(js, val, "source")) np.source = *source;
-    else return std::unexpected(source.error());
+    else return Err(source.error());
     if (auto left = try_get_property<int>(js, val, "left")) np.left = *left;
-    else return std::unexpected(left.error());
+    else return Err(left.error());
     if (auto top = try_get_property<int>(js, val, "top")) np.top = *top;
-    else return std::unexpected(top.error());
+    else return Err(top.error());
     if (auto right = try_get_property<int>(js, val, "right")) np.right = *right;
-    else return std::unexpected(right.error());
+    else return Err(right.error());
     if (auto bottom = try_get_property<int>(js, val, "bottom")) np.bottom = *bottom;
-    else return std::unexpected(bottom.error());
+    else return Err(bottom.error());
     if (auto layout = try_get_property<int>(js, val, "layout")) np.layout = *layout;
-    else return std::unexpected(layout.error());
+    else return Err(layout.error());
 
     return np;
 }

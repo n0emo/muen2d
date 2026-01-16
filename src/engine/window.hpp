@@ -1,12 +1,14 @@
 #pragma once
 
+#include <string>
+
 namespace window {
 
 struct Config {
     int width;
     int height;
     int fps;
-    const char *title;
+    std::string title;
 };
 
 struct Window {
@@ -14,7 +16,7 @@ struct Window {
 };
 
 auto setup() -> void;
-auto create(Config config) -> Window;
+auto create(const Config& config) -> Window;
 auto close(Window& self) -> void;
 auto should_close(Window& self) -> bool;
 auto begin_drawing(Window& self) -> void;

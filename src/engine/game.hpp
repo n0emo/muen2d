@@ -3,8 +3,8 @@
 #include <quickjs.h>
 
 #include <string>
-#include <expected>
-#include <variant>
+
+#include <error.hpp>
 
 namespace muen::game {
 
@@ -12,7 +12,7 @@ struct Config {
     int width = 800;
     int height = 600;
     int fps = 60;
-    const char *title = "muen2d";
+    std::string title = "muen2d";
 };
 
 struct Game {
@@ -26,12 +26,12 @@ struct Game {
     JSValue post_reload;
 };
 
-auto create(JSContext *js, std::string path) -> std::expected<Game, JSValue>;
+auto create(JSContext *js, std::string path) -> Result<Game>;
 auto destroy(Game& self) -> void;
-auto load(Game& self) -> std::expected<std::monostate, JSValue>;
-auto update(Game& self) -> std::expected<std::monostate, JSValue>;
-auto draw(Game& self) -> std::expected<std::monostate, JSValue>;
-auto pre_reload(Game& self) -> std::expected<JSValue, JSValue>;
-auto post_reload(Game& self, JSValue state) -> std::expected<JSValue, JSValue>;
+auto load(Game& self) -> Result<>;
+auto update(Game& self) -> Result<>;
+auto draw(Game& self) -> Result<>;
+auto pre_reload(Game& self) -> Result<JSValue>;
+auto post_reload(Game& self, JSValue state) -> Result<>;
 
 } // namespace muen::game

@@ -14,6 +14,8 @@
 
 namespace js {
 
+using muen::Err;
+
 template<>
 auto try_as<Texture>(JSContext *js, JSValueConst val) -> std::expected<Texture, JSValue> {
     const auto id = class_id<&muen::plugins::graphics::texture::CLASS>(js);
@@ -22,7 +24,7 @@ auto try_as<Texture>(JSContext *js, JSValueConst val) -> std::expected<Texture, 
         return *ptr;
     }
 
-    return std::unexpected(JS_ThrowTypeError(js, "Expected Texture object"));
+    return Err(JS_ThrowTypeError(js, "Expected Texture object"));
 }
 
 } // namespace js

@@ -10,14 +10,21 @@ auto plugin(JSContext *js) -> EnginePlugin {
                 {"muen:Music", music_class::module(js)},
                 {"muen:Sound", sound_class::module(js)},
             },
-        .load = []() -> void { engine::audio::init(); },
-        .unload = []() -> void { engine::audio::close(); },
-        .update = []() -> void {
+        .load = []() -> Result<> {
+            engine::audio::init();
+            return {};
+        },
+        .unload = []() -> Result<> {
+            engine::audio::close();
+            return {};
+        },
+        .update = []() -> Result<> {
             for (const auto music : engine::audio::get().musics) {
                 if (engine::audio::music::is_playing(*music)) {
                     engine::audio::music::update(*music);
                 }
             }
+            return {};
         }
     };
 }

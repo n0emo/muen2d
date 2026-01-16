@@ -13,8 +13,9 @@ auto plugin(JSContext *js) -> EnginePlugin {
             {"muen:Texture", texture::module(js)},
             {"muen:graphics", module(js)},
         },
-        .draw = []() -> void {
-            ::ClearBackground(BLACK);
+        .draw = []() -> Result<> {
+            ClearBackground(BLACK);
+            return {};
         }
     };
 }

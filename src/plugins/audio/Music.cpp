@@ -42,7 +42,7 @@ static auto music_constructor(JSContext *js, JSValue new_target, int argc, JSVal
     const auto result = audio::music::load(path);
     ::JS_FreeCString(js, filename);
     if (!result.has_value()) {
-        return ::JS_ThrowInternalError(js, "Could not load music: %s", result.error().c_str());
+        return JS_ThrowInternalError(js, "%s", std::format("Could not load music: {}", result.error()->msg()).c_str());
     }
     audio::get().musics.insert(*result);
 
@@ -205,7 +205,7 @@ auto module(::JSContext *js) -> ::JSModuleDef * {
         ::JS_NewClass(::JS_GetRuntime(js), class_id(js), &MUSIC_CLASS);
 
         ::JSValue proto = ::JS_NewObject(js);
-        ::JS_SetPropertyFunctionList(js, proto, PROTO_FUNCS.data(), int{PROTO_FUNCS.size()});
+        ::JS_SetPropertyFunctionList(js, proto, PROTO_FUNCS.data(), int {PROTO_FUNCS.size()});
         ::JS_SetClassProto(js, class_id(js), proto);
 
         ::JSValue ctor = ::JS_NewCFunction2(js, music_constructor, "Music", 1, ::JS_CFUNC_constructor, 0);
@@ -221,4 +221,4 @@ auto module(::JSContext *js) -> ::JSModuleDef * {
     return m;
 }
 
-} // namespace muen::plugins::audio::MusicJS
+} // namespace muen::plugins::audio::music_class

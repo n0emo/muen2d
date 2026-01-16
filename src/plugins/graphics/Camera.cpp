@@ -8,8 +8,11 @@
 
 #include <defer.hpp>
 #include <plugins/math.hpp>
+#include <error.hpp>
 
 namespace js {
+
+using namespace muen;
 
 template<>
 auto try_as<Camera2D>(JSContext *js, JSValueConst val) -> std::expected<Camera2D, JSValue> {
@@ -24,13 +27,13 @@ auto try_as<Camera2D>(JSContext *js, JSValueConst val) -> std::expected<Camera2D
     auto cam = ::Camera2D {};
 
     if (auto offset = js::try_get_property<Vector2>(js, val, "offset")) cam.offset = *offset;
-    else return std::unexpected(offset.error());
+    else return Err(offset.error());
     if (auto target = js::try_get_property<Vector2>(js, val, "target")) cam.target = *target;
-    else return std::unexpected(target.error());
+    else return Err(target.error());
     if (auto rotation = js::try_get_property<float>(js, val, "rotation")) cam.rotation = *rotation;
-    else return std::unexpected(rotation.error());
+    else return Err(rotation.error());
     if (auto zoom = js::try_get_property<float>(js, val, "zoom")) cam.zoom = *zoom;
-    else return std::unexpected(zoom.error());
+    else return Err(zoom.error());
 
     return cam;
 }

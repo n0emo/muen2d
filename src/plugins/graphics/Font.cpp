@@ -7,13 +7,15 @@
 
 namespace js {
 
+using muen::Err;
+
 template<>
 auto try_as<Font>(JSContext *js, JSValueConst value) -> std::expected<Font, JSValue> {
     const auto id = class_id<&muen::plugins::graphics::font::CLASS>(js);
     if (JS_IsObject(value) && id == JS_GetClassID(value)) {
         return *static_cast<Font *>(JS_GetOpaque(value, id));
     } else {
-        return std::unexpected(JS_NewTypeError(js, "Font must be object of class Font"));
+        return Err(JS_NewTypeError(js, "Font must be object of class Font"));
     }
 }
 

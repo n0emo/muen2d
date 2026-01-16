@@ -11,15 +11,17 @@ check-js:
     npm run lint
 
 check-cpp:
-    rm -rf build
-    xmake build muen
+    xmake build -r muen
     xmake check clang.tidy --quiet
 
 build:
     xmake build muen
 
+rebuild:
+    xmake build -r muen
+
 run game:
-    xmake run muen {{ justfile_dir() / "examples" / game }}
+    xmake run muen {{ justfile_directory() / "examples" / game }}
 
 install-local: build
     xmake install -o $HOME/.local/

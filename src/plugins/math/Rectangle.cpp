@@ -30,31 +30,18 @@ auto from_value(::JSContext *js, ::JSValueConst val) -> std::expected<::Rectangl
     }
 
     auto rec = ::Rectangle {};
-    auto prop = ::JSValue {};
-    auto temp = double {};
 
-    prop = ::JS_GetPropertyStr(js, val, "x");
-    ::JS_ToFloat64(js, &temp, prop);
-    rec.x = static_cast<float>(temp);
-    ::JS_FreeValue(js, prop);
+    if (auto v = js::try_get_property<float>(js, val, "x")) rec.x = *v;
+    else return Err(v.error());
+    if (auto v = js::try_get_property<float>(js, val, "y")) rec.y = *v;
+    else return Err(v.error());
+    if (auto v = js::try_get_property<float>(js, val, "width")) rec.width = *v;
+    else return Err(v.error());
+    if (auto v = js::try_get_property<float>(js, val, "height")) rec.height = *v;
+    else return Err(v.error());
 
-    prop = ::JS_GetPropertyStr(js, val, "y");
-    ::JS_ToFloat64(js, &temp, prop);
-    rec.y = static_cast<float>(temp);
-    ::JS_FreeValue(js, prop);
-
-    prop = ::JS_GetPropertyStr(js, val, "width");
-    ::JS_ToFloat64(js, &temp, prop);
-    rec.width = static_cast<float>(temp);
-    ::JS_FreeValue(js, prop);
-
-    prop = ::JS_GetPropertyStr(js, val, "height");
-    ::JS_ToFloat64(js, &temp, prop);
-    rec.height = static_cast<float>(temp);
-    ::JS_FreeValue(js, prop);
-
-    if (::JS_HasException(js)) {
-        return std::unexpected(::JS_GetException(js));
+    if (JS_HasException(js)) {
+        return Err(JS_GetException(js));
     } else {
         return rec;
     }
@@ -215,7 +202,7 @@ static auto set_height(::JSContext *js, ::JSValueConst this_val, ::JSValueConst 
 static auto object_to_string(::JSContext *js, JSValueConst this_val, int, JSValueConst *) -> ::JSValue {
     auto rec = pointer_from_value(js, this_val);
     const auto str = to_string(*rec);
-       
+
     return JS_NewString(js, str.c_str());
 }
 
@@ -246,11 +233,11 @@ auto module(::JSContext *js) -> ::JSModuleDef * {
         ::JS_NewClass(::JS_GetRuntime(js), class_id(js), &RECTANGLE_CLASS);
 
         ::JSValue proto = ::JS_NewObject(js);
-        ::JS_SetPropertyFunctionList(js, proto, PROTO_FUNCS.data(), int{PROTO_FUNCS.size()});
+        ::JS_SetPropertyFunctionList(js, proto, PROTO_FUNCS.data(), int {PROTO_FUNCS.size()});
         ::JS_SetClassProto(js, class_id(js), proto);
 
         ::JSValue ctor = ::JS_NewCFunction2(js, constructor, "Rectangle", 1, ::JS_CFUNC_constructor, 0);
-        ::JS_SetPropertyFunctionList(js, ctor, STATIC_FUNCS.data(), int{STATIC_FUNCS.size()});
+        ::JS_SetPropertyFunctionList(js, ctor, STATIC_FUNCS.data(), int {STATIC_FUNCS.size()});
         ::JS_SetConstructor(js, ctor, proto);
 
         ::JS_SetModuleExport(js, m, "default", ctor);
