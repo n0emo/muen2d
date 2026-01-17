@@ -2,7 +2,6 @@
 
 #include <array>
 #include <expected>
-#include <format>
 
 #include <raylib.h>
 
@@ -99,7 +98,7 @@ auto module(JSContext *js) -> JSModuleDef * {
 }
 
 auto to_string(NPatchInfo npatch) -> std::string {
-    return std::format(
+    return fmt::format(
         "NPatch {{ source: {}, left: {}, top: {}, right: {}, bottom: {}, layout: {} }}",
         npatch.source,
         npatch.left,

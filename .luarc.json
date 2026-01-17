@@ -1,0 +1,48 @@
+{
+  "runtime": {
+    "version": "Lua 5.4"
+  },
+  "diagnostics": {
+    "globals": [
+      "add_cflags",
+      "add_cxxflags",
+      "add_defines",
+      "add_deps",
+      "add_files",
+      "add_headerfiles",
+      "add_includedirs",
+      "add_ldflags",
+      "add_linkdirs",
+      "add_links",
+      "add_options",
+      "add_packages",
+      "add_requires",
+      "add_rules",
+      "after_build",
+      "after_install",
+      "before_build",
+      "before_install",
+      "import",
+      "includes",
+      "is_plat",
+      "on_build",
+      "on_install",
+      "on_load",
+      "on_test",
+      "option",
+      "package",
+      "rule",
+      "set_default",
+      "set_description",
+      "set_kind",
+      "set_languages",
+      "set_license",
+      "set_warnings",
+      "target",
+      "task"
+    ]
+  },
+  "workspace": {
+    "library": []
+  }
+}

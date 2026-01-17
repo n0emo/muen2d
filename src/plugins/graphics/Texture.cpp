@@ -2,13 +2,12 @@
 
 #include <array>
 #include <expected>
-#include <format>
 
+#include <fmt/format.h>
 #include <raylib.h>
 #include <spdlog/spdlog.h>
 
 #include <defer.hpp>
-
 #include <engine.hpp>
 #include <plugins/math.hpp>
 
@@ -71,7 +70,7 @@ auto module(JSContext *js) -> JSModuleDef * {
 }
 
 auto to_string(Texture tex) -> std::string {
-    return std::format(
+    return fmt::format(
         "Texture {{ id: {}, width: {}, height: {}, mipmaps: {}, format: {} }}",
         tex.id,
         tex.width,

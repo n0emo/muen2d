@@ -3,6 +3,7 @@ set windows-shell := ["C:/Program Files/Git/bin/bash.exe", "-c"]
 configure *args:
     npm install
     xmake config --mode=debug {{ args }}
+    xmake require --build --force --yes
 
 check: check-js check-cpp
 

@@ -1,7 +1,6 @@
 #include <error.hpp>
 
 #include <utility>
-#include <format>
 
 namespace muen::error {
 
@@ -15,7 +14,7 @@ auto IError::loc() const noexcept -> std::optional<std::source_location> {
 
 auto IError::loc_str() const noexcept -> std::optional<std::string> {
     if (auto loc = this->loc(); loc.has_value()) {
-        return std::format("{}:{}:{} ({})", loc->file_name(), loc->line(), loc->column(), loc->function_name());
+        return fmt::format("{}:{}:{} ({})", loc->file_name(), loc->line(), loc->column(), loc->function_name());
     } else {
         return std::nullopt;
     }

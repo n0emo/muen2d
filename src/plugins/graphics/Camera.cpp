@@ -2,8 +2,8 @@
 
 #include <array>
 #include <expected>
-#include <format>
 
+#include <fmt/format.h>
 #include <raylib.h>
 
 #include <defer.hpp>
@@ -98,7 +98,7 @@ auto module(JSContext *js) -> JSModuleDef * {
 }
 
 auto to_string(Camera2D cam) -> std::string {
-    return std::format(
+    return fmt::format(
         "Camera {{ offset: {{{}, {}}}, target: {{{}, {}}}, rotation: {}, zoom: {} }}",
         cam.offset.x,
         cam.offset.y,

@@ -3,6 +3,7 @@
 #include <expected>
 
 #include <raylib.h>
+#include <spdlog/spdlog.h>
 
 #include <engine/plugin.hpp>
 #include <jsutil.hpp>
@@ -73,67 +74,67 @@ namespace texture {
 } // namespace muen::plugins::graphics
 
 template<>
-struct std::formatter<Camera2D> {
-    constexpr auto parse(std::format_parse_context& ctx) {
+struct fmt::formatter<Camera2D> {
+    constexpr auto parse(fmt::format_parse_context& ctx) {
         return ctx.begin();
     }
 
-    auto format(const Camera2D& v, std::format_context& ctx) const {
-        return std::format_to(ctx.out(), "{}", muen::plugins::graphics::camera::to_string(v));
+    auto format(const Camera2D& v, fmt::format_context& ctx) const {
+        return fmt::format_to(ctx.out(), "{}", muen::plugins::graphics::camera::to_string(v));
     }
 };
 
 template<>
-struct std::formatter<Color> {
-    constexpr auto parse(std::format_parse_context& ctx) {
+struct fmt::formatter<Color> {
+    constexpr auto parse(fmt::format_parse_context& ctx) {
         return ctx.begin();
     }
 
-    auto format(const Color& v, std::format_context& ctx) const {
-        return std::format_to(ctx.out(), "{}", muen::plugins::graphics::color::to_string(v));
+    auto format(const Color& v, fmt::format_context& ctx) const {
+        return fmt::format_to(ctx.out(), "{}", muen::plugins::graphics::color::to_string(v));
     }
 };
 
 template<>
-struct std::formatter<Font> {
-    constexpr auto parse(std::format_parse_context& ctx) {
+struct fmt::formatter<Font> {
+    constexpr auto parse(fmt::format_parse_context& ctx) {
         return ctx.begin();
     }
 
-    auto format(const Font& v, std::format_context& ctx) const {
-        return std::format_to(ctx.out(), "{}", muen::plugins::graphics::font::to_string(v));
+    auto format(const Font& v, fmt::format_context& ctx) const {
+        return fmt::format_to(ctx.out(), "{}", muen::plugins::graphics::font::to_string(v));
     }
 };
 
 template<>
-struct std::formatter<NPatchInfo> {
-    constexpr auto parse(std::format_parse_context& ctx) {
+struct fmt::formatter<NPatchInfo> {
+    constexpr auto parse(fmt::format_parse_context& ctx) {
         return ctx.begin();
     }
 
-    auto format(const NPatchInfo& v, std::format_context& ctx) const {
-        return std::format_to(ctx.out(), "{}", muen::plugins::graphics::npatch::to_string(v));
+    auto format(const NPatchInfo& v, fmt::format_context& ctx) const {
+        return fmt::format_to(ctx.out(), "{}", muen::plugins::graphics::npatch::to_string(v));
     }
 };
 
 template<>
-struct std::formatter<RenderTexture> {
-    constexpr auto parse(std::format_parse_context& ctx) {
+struct fmt::formatter<RenderTexture> {
+    constexpr auto parse(fmt::format_parse_context& ctx) {
         return ctx.begin();
     }
 
-    auto format(const RenderTexture& v, std::format_context& ctx) const {
-        return std::format_to(ctx.out(), "{}", muen::plugins::graphics::render_texture::to_string(v));
+    auto format(const RenderTexture& v, fmt::format_context& ctx) const {
+        return fmt::format_to(ctx.out(), "{}", muen::plugins::graphics::render_texture::to_string(v));
     }
 };
 
 template<>
-struct std::formatter<Texture> {
-    constexpr auto parse(std::format_parse_context& ctx) {
+struct fmt::formatter<Texture> {
+    constexpr auto parse(fmt::format_parse_context& ctx) {
         return ctx.begin();
     }
 
-    auto format(const Texture& v, std::format_context& ctx) const {
-        return std::format_to(ctx.out(), "{}", muen::plugins::graphics::texture::to_string(v));
+    auto format(const Texture& v, fmt::format_context& ctx) const {
+        return fmt::format_to(ctx.out(), "{}", muen::plugins::graphics::texture::to_string(v));
     }
 };

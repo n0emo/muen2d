@@ -42,7 +42,7 @@ static auto music_constructor(JSContext *js, JSValue new_target, int argc, JSVal
     const auto result = audio::music::load(path);
     ::JS_FreeCString(js, filename);
     if (!result.has_value()) {
-        return JS_ThrowInternalError(js, "%s", std::format("Could not load music: {}", result.error()->msg()).c_str());
+        return JS_ThrowInternalError(js, "%s", fmt::format("Could not load music: {}", result.error()->msg()).c_str());
     }
     audio::get().musics.insert(*result);
 

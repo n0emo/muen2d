@@ -1,8 +1,8 @@
 #include <plugins/math.hpp>
 
 #include <array>
-#include <format>
 
+#include <fmt/format.h>
 #include <raylib.h>
 
 #include <defer.hpp>
@@ -251,7 +251,7 @@ auto module(::JSContext *js) -> ::JSModuleDef * {
 }
 
 auto to_string(Rectangle rec) -> std::string {
-    return std::format("Rectangle {{ x: {}, y: {}, width: {}, height: {} }}", rec.x, rec.y, rec.width, rec.height);
+    return fmt::format("Rectangle {{ x: {}, y: {}, width: {}, height: {} }}", rec.x, rec.y, rec.width, rec.height);
 }
 
 } // namespace muen::plugins::math::rectangle

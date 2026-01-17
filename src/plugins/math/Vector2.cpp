@@ -2,8 +2,8 @@
 
 #include <array>
 #include <expected>
-#include <format>
 
+#include <fmt/format.h>
 #include <raylib.h>
 
 #include <jsutil.hpp>
@@ -182,7 +182,7 @@ auto module(::JSContext *js) -> ::JSModuleDef * {
 }
 
 auto to_string(::Vector2 vec) -> std::string {
-    return std::format("Vector2 {{ x: {}, y: {} }}", vec.x, vec.y);
+    return fmt::format("Vector2 {{ x: {}, y: {} }}", vec.x, vec.y);
 }
 
 } // namespace muen::plugins::math::vector2

@@ -71,7 +71,7 @@ auto module(JSContext *js) -> JSModuleDef * {
 }
 
 auto to_string(RenderTexture texture) -> std::string {
-    return std::format("RenderTexture{{ texture: {}, depth: {}, id: {} }}", texture.texture, texture.depth, texture.id);
+    return fmt::format("RenderTexture{{ texture: {}, depth: {}, id: {} }}", texture.texture, texture.depth, texture.id);
 }
 
 static auto constructor(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {

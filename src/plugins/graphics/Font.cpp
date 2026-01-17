@@ -64,7 +64,7 @@ auto module(JSContext *js) -> JSModuleDef * {
 }
 
 auto to_string(Font font) -> std::string {
-    return std::format("Font {{ id: {}, size: {}, glyphCount: {} }}", font.texture.id, font.baseSize, font.glyphCount);
+    return fmt::format("Font {{ id: {}, size: {}, glyphCount: {} }}", font.texture.id, font.baseSize, font.glyphCount);
 }
 
 auto from_value_unsafe(JSContext *js, ::JSValueConst val) -> Font * {

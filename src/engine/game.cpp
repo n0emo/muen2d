@@ -7,6 +7,7 @@
 #include <span>
 #include <sstream>
 
+#include <fmt/format.h>
 #include <spdlog/spdlog.h>
 
 #include <defer.hpp>
@@ -39,7 +40,7 @@ auto create(JSContext *js, std::string path) -> Result<Game> {
     try {
         game_buf << game_file.rdbuf();
     } catch (std::exception&) {
-        return Err(error::create(std::format("Could not load game file: {}", strerror(errno))));
+        return Err(error::create(fmt::format("Could not load game file: {}", strerror(errno))));
     }
 
     const auto src = game_buf.str();

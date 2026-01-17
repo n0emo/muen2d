@@ -1,9 +1,9 @@
 #pragma once
 
-#include <format>
 #include <expected>
 
 #include <raylib.h>
+#include <spdlog/spdlog.h>
 
 #include <engine/plugin.hpp>
 #include <jsutil.hpp>
@@ -41,23 +41,23 @@ auto try_as<::Rectangle>(::JSContext *js, ::JSValueConst value) -> std::expected
 } // namespace js
 
 template<>
-struct std::formatter<Vector2> {
-    constexpr auto parse(std::format_parse_context& ctx) {
+struct fmt::formatter<Vector2> {
+    constexpr auto parse(fmt::format_parse_context& ctx) {
         return ctx.begin();
     }
 
-    auto format(const Vector2& v, std::format_context& ctx) const {
-        return std::format_to(ctx.out(), "{}", muen::plugins::math::vector2::to_string(v));
+    auto format(const Vector2& v, fmt::format_context& ctx) const {
+        return fmt::format_to(ctx.out(), "{}", muen::plugins::math::vector2::to_string(v));
     }
 };
 
 template<>
-struct std::formatter<Rectangle> {
-    constexpr auto parse(std::format_parse_context& ctx) {
+struct fmt::formatter<Rectangle> {
+    constexpr auto parse(fmt::format_parse_context& ctx) {
         return ctx.begin();
     }
 
-    auto format(const Rectangle& v, std::format_context& ctx) const {
-        return std::format_to(ctx.out(), "{}", muen::plugins::math::rectangle::to_string(v));
+    auto format(const Rectangle& v, fmt::format_context& ctx) const {
+        return fmt::format_to(ctx.out(), "{}", muen::plugins::math::rectangle::to_string(v));
     }
 };

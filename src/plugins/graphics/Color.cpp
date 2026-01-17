@@ -2,10 +2,10 @@
 
 #include <array>
 #include <expected>
-#include <format>
 #include <string>
 #include <charconv>
 
+#include <fmt/format.h>
 #include <raylib.h>
 
 #include <defer.hpp>
@@ -98,7 +98,7 @@ auto module(JSContext *js) -> JSModuleDef * {
 }
 
 auto to_string(Color col) -> std::string {
-    return std::format("Color {{ r: {}, g: {}, b: {}, a: {} }}", col.r, col.g, col.b, col.a);
+    return fmt::format("Color {{ r: {}, g: {}, b: {}, a: {} }}", col.r, col.g, col.b, col.a);
 }
 
 auto pointer_from_value(::JSContext *js, ::JSValueConst val) -> ::Color * {
