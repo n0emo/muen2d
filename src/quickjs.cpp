@@ -164,7 +164,7 @@ auto JSError::range_error(not_null<JSContext *> ctx, const std::string& msg, std
     return JSError(std::move(obj), loc);
 }
 
-auto JSError::msg() const noexcept -> std::string {
+auto JSError::msg() const noexcept -> std::string try {
     auto m = message().value_or("Unknown error");
     auto s = stack();
 
@@ -173,6 +173,8 @@ auto JSError::msg() const noexcept -> std::string {
     } else {
         return m;
     }
+} catch (...) {
+    return {};
 }
 
 auto JSError::loc() const noexcept -> std::optional<std::source_location> {
@@ -195,16 +197,20 @@ auto JSError::cvalue() const noexcept -> const JSValue& {
     return _obj.cget().cget();
 }
 
-auto JSError::message() const noexcept -> std::optional<std::string> {
+auto JSError::message() const noexcept -> std::optional<std::string> try {
     auto r = _obj.at<std::optional<std::string>>("message");
     if (r.has_value() && r->has_value()) return *r;
     else return std::nullopt;
-}
+} catch (...) {
+    return std::nullopt;
+};
 
-auto JSError::stack() const noexcept -> std::optional<std::string> {
+auto JSError::stack() const noexcept -> std::optional<std::string> try {
     auto r = _obj.at<std::optional<std::string>>("stack");
     if (r.has_value() && r->has_value()) return *r;
     else return std::nullopt;
+} catch (...) {
+    return std::nullopt;
 }
 
 auto borrow(not_null<JSContext *> ctx, JSValue val) noexcept -> Value {

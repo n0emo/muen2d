@@ -1,22 +1,8 @@
 #pragma once
 
-template<typename F>
-struct privDefer { // NOLINT
-    F f;
-
-    privDefer(F f) : f(f) {}
-
-    ~privDefer() {
-        f();
-    }
-};
-
-template<typename F>
-auto defer_func(F f) -> privDefer<F> {
-    return privDefer<F>(f);
-}
+#include <gsl/gsl>
 
 #define DEFER_1(x, y) x##y
 #define DEFER_2(x, y) DEFER_1(x, y) // NOLINT
 #define DEFER_3(x) DEFER_2(x, __COUNTER__) // NOLINT
-#define defer(code) auto DEFER_3(_defer_) = defer_func([&]() { code; }) // NOLINT
+#define defer(code) auto DEFER_3(_defer_) = gsl::finally([&]() { code; }) // NOLINT

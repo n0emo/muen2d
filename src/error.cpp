@@ -6,8 +6,8 @@
 
 namespace muen::error {
 
-auto IError::msg() const noexcept -> std::string {
-    return "Generic error";
+auto IError::msg() const noexcept -> std::string try { return "Generic error"; } catch (...) {
+    return {};
 };
 
 auto IError::loc() const noexcept -> std::optional<std::source_location> {
@@ -24,18 +24,18 @@ auto IError::loc_str() const noexcept -> std::optional<std::string> {
 
 StringError::StringError(std::string msg, std::source_location loc) noexcept : _msg {std::move(msg)}, _loc {loc} {}
 
-auto StringError::msg() const noexcept -> std::string {
-    return _msg;
-}
+auto StringError::msg() const noexcept -> std::string try { return _msg; } catch (...) {
+    return {};
+};
 
 auto StringError::loc() const noexcept -> std::optional<std::source_location> {
     return _loc;
-};
+}
 
 StdError::StdError(const std::exception& e, std::source_location loc) : _exception {&e}, _loc {loc} {}
 
-auto StdError::msg() const noexcept -> std::string {
-    return _exception->what();
+auto StdError::msg() const noexcept -> std::string try { return _exception->what(); } catch (...) {
+    return {};
 }
 
 auto StdError::loc() const noexcept -> std::optional<std::source_location> {

@@ -344,7 +344,7 @@ inline auto try_into(const Value& v) noexcept -> JSResult<T> {
 
 template<typename T>
     requires is_container<T> && (!is_basic_string_v<T>)
-inline auto try_into(const Value& v) noexcept -> JSResult<T> {
+inline auto try_into(const Value& v) noexcept -> JSResult<T> try {
     if (!JS_IsArray(v.cget())) {
         return Unexpected(
             JSError::type_error(v.ctx(), fmt::format("Value of type `{}` is not an Array", display_type(v)))
@@ -366,6 +366,8 @@ inline auto try_into(const Value& v) noexcept -> JSResult<T> {
         container.push_back(*val);
     }
     return container;
+} catch (std::exception& e) {
+    return Unexpected(js::JSError::plain_error(v.ctx(), fmt::format("Unexpected error: {}", e.what())));
 }
 
 template<typename T>
