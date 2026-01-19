@@ -52,7 +52,7 @@ class ZipStore final: public IFileStore {
     zip_t *_zip;
 
   public:
-    static auto open(const std::filesystem::path& path) -> Result<ZipStore>;
+    static auto open(const std::filesystem::path& path) noexcept -> Result<ZipStore>;
 
     auto read(const std::filesystem::path& path, std::ostream& stream) noexcept -> Result<> override;
     auto read_bytes(const std::filesystem::path& path) noexcept -> Result<std::vector<char>> override;

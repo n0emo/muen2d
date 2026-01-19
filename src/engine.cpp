@@ -10,7 +10,7 @@
 namespace muen {
 
 extern "C" auto module_loader(JSContext *ctx, const char *module_name, void *opaque) noexcept -> JSModuleDef *;
-auto read_config(JSContext *js, JSValue object) -> Result<GameConfig>;
+auto read_config(js::Object& ns) -> Result<GameConfig>;
 
 auto Engine::JSRuntime_deleter::operator()(JSRuntime *rt) noexcept -> void {
     if (rt == nullptr) return;
@@ -27,22 +27,22 @@ auto Engine::create(const std::filesystem::path& base_path) noexcept -> Result<s
 
     SPDLOG_TRACE("Creating JS runtime");
     auto runtime_ptr = JS_NewRuntime();
-    if (runtime_ptr == nullptr) return Err(error::create("Could not allocate runtime"));
+    if (runtime_ptr == nullptr) return err("Could not allocate runtime");
     auto runtime = std::unique_ptr<JSRuntime, JSRuntime_deleter>(runtime_ptr);
 
     SPDLOG_TRACE("Creating JS context");
     auto context_ptr = JS_NewContext(runtime.get());
-    if (context_ptr == nullptr) return Err(error::create("Could not allocate context"));
+    if (context_ptr == nullptr) return err("Could not allocate context");
     auto context = std::unique_ptr<JSContext, JSContext_deleter>(context_ptr);
 
     SPDLOG_TRACE("Creating file store");
     auto store = std::unique_ptr<IFileStore> {};
     if (std::filesystem::is_directory(base_path)) {
         if (auto r = FilesystemStore::open(base_path)) store = std::make_unique<FilesystemStore>(std::move(*r));
-        else return Err(r.error());
+        else return err(r);
     } else {
         if (auto r = ZipStore::open(base_path)) store = std::make_unique<ZipStore>(std::move(*r));
-        else return Err(r.error());
+        else return err(r);
     }
 
     SPDLOG_TRACE("Allocationg engine");
@@ -51,7 +51,7 @@ auto Engine::create(const std::filesystem::path& base_path) noexcept -> Result<s
         std::move(context),
         std::move(store),
     });
-    if (engine_ptr == nullptr) return Err(error::create("Could not allocate engine"));
+    if (engine_ptr == nullptr) return err("Could not allocate engine");
     auto engine = std::unique_ptr<Engine>(engine_ptr);
 
     JS_SetDumpFlags(engine->js_runtime(), JS_DUMP_LEAKS);
@@ -117,11 +117,11 @@ auto Engine::register_plugin(const plugins::EnginePlugin& desc) noexcept -> void
 auto Engine::load_plugins() noexcept -> Result<> try {
     SPDLOG_DEBUG("Loading plugins");
     for (const auto& callback : _load_callbacks) {
-        if (auto result = callback(); !result) return Err(std::move(result.error()));
+        if (auto result = callback(); !result) return err(result);
     }
     return {};
 } catch (std::exception& e) {
-    return Err(error::create(e.what()));
+    return err(e);
 }
 
 [[nodiscard]] auto Engine::run_game(Game& game) noexcept -> Result<> try {
@@ -149,7 +149,7 @@ auto Engine::load_plugins() noexcept -> Result<> try {
     });
 
     SPDLOG_DEBUG("Loading game");
-    if (auto r = game.load(); !r) return Err(r.error());
+    if (auto r = game.load(); !r) return err(r);
 
     SPDLOG_DEBUG("Running rame");
     while (!window::should_close(w)) {
@@ -161,21 +161,21 @@ auto Engine::load_plugins() noexcept -> Result<> try {
 
         SPDLOG_TRACE("Updating plugins");
         for (const auto& callback : _update_callbacks) {
-            if (auto r = callback(); !r) return Err(r.error());
+            if (auto r = callback(); !r) return err(r);
         }
 
         SPDLOG_TRACE("Updating game");
-        if (auto r = game.update(); !r) return Err(r.error());
+        if (auto r = game.update(); !r) return err(r);
 
         window::begin_drawing(w);
 
         SPDLOG_TRACE("Drawing plugins");
         for (const auto& callback : _draw_callbacks) {
-            if (auto r = callback(); !r) return Err(r.error());
+            if (auto r = callback(); !r) return err(r);
         }
 
         SPDLOG_TRACE("Drawing game");
-        if (auto r = game.draw(); !r) return Err(r.error());
+        if (auto r = game.draw(); !r) return err(r);
 
         window::draw_fps(w);
         window::end_drawing(w);
@@ -183,7 +183,7 @@ auto Engine::load_plugins() noexcept -> Result<> try {
 
     return {};
 } catch (std::exception& e) {
-    return Err(error::create(e.what()));
+    return err(e);
 }
 
 auto Engine::load_module(const std::filesystem::path& name) noexcept -> Result<owner<JSModuleDef *>> try {
@@ -203,7 +203,7 @@ auto Engine::load_module(const std::filesystem::path& name) noexcept -> Result<o
             }
             SPDLOG_TRACE("Loading module {}", path.string());
             const auto contents = _store->read_string(path);
-            if (!contents) return Err(contents.error());
+            if (!contents) return err(contents);
             SPDLOG_DEBUG("Module {} resolved as game module", name.string());
             code = *contents;
         }
@@ -223,7 +223,7 @@ auto Engine::load_module(const std::filesystem::path& name) noexcept -> Result<o
         return mod;
     }
 } catch (std::exception& e) {
-    return Err(error::create(e.what()));
+    return err(e);
 }
 
 Engine::Engine(
@@ -240,7 +240,7 @@ auto Game::create(not_null<JSContext *> js, not_null<IFileStore *> store) -> Res
 
     SPDLOG_TRACE("Reading game file");
     const auto src = store->read_string("game.js");
-    if (!src) return Err(src.error());
+    if (!src) return err(src);
 
     SPDLOG_TRACE("Compiling game module");
     auto mod = JS_Eval(
@@ -250,34 +250,35 @@ auto Game::create(not_null<JSContext *> js, not_null<IFileStore *> store) -> Res
         "game.js",
         JS_EVAL_TYPE_MODULE | JS_EVAL_FLAG_STRICT | JS_EVAL_FLAG_COMPILE_ONLY
     );
-    if (JS_HasException(js)) return Err(error::from_js(js, JS_GetException(js)));
+    if (JS_HasException(js)) return err(js::JSError::from_value(js::own(js, JS_GetException(js))));
 
     SPDLOG_TRACE("Evaluating game module");
     auto eval_ret = JS_EvalFunction(js, mod);
     defer(JS_FreeValue(js, eval_ret));
     auto eval_result = JS_PromiseResult(js, eval_ret);
-    if (JS_IsError(eval_result)) return Err(error::from_js(js, eval_result));
+    if (JS_IsError(eval_result)) return err(js::JSError::from_value(js::own(js, eval_result)));
     JS_FreeValue(js, eval_result);
 
     auto m = static_cast<JSModuleDef *>(JS_VALUE_GET_PTR(mod));
-    auto ns = JS_GetModuleNamespace(js, m);
-    defer(JS_FreeValue(js, ns));
+    auto ns_prop = JS_GetModuleNamespace(js, m);
+    auto ns_val = js::own(js, ns_prop);
+    auto ns = *js::Object::from_value(ns_val);
 
     SPDLOG_TRACE("Reading game config");
-    auto config = read_config(js, ns);
-    if (!config) return Err(config.error());
+    auto config = read_config(ns);
+    if (!config) return err(config);
 
     SPDLOG_TRACE("Reading game callbacks");
-    auto load = js::try_get_property<std::optional<js::Function>>(js, ns, "load");
-    if (!load) return Err(error::create("game.load is not a function"));
-    auto update = js::try_get_property<std::optional<js::Function>>(js, ns, "update");
-    if (!update) return Err(error::create("game.update is not a function"));
-    auto draw = js::try_get_property<std::optional<js::Function>>(js, ns, "draw");
-    if (!draw) return Err(error::create("game.draw is not a function"));
-    auto pre_reload = js::try_get_property<std::optional<js::Function>>(js, ns, "preReload");
-    if (!pre_reload) return Err(error::create("game.preReload is not a function"));
-    auto post_reload = js::try_get_property<std::optional<js::Function>>(js, ns, "postReload");
-    if (!post_reload) return Err(error::create("game.postReload is not a function"));
+    auto load = ns.at<std::optional<js::Function>>("load");
+    if (!load) return err("game.load is not a function");
+    auto update = ns.at<std::optional<js::Function>>("update");
+    if (!update) return err("game.update is not a function");
+    auto draw = ns.at<std::optional<js::Function>>("draw");
+    if (!draw) return err("game.draw is not a function");
+    auto pre_reload = ns.at<std::optional<js::Function>>("preReload");
+    if (!pre_reload) return err("game.preReload is not a function");
+    auto post_reload = ns.at<std::optional<js::Function>>("postReload");
+    if (!post_reload) return err("game.postReload is not a function");
 
     SPDLOG_TRACE("Game created successfully");
     return Game({
@@ -300,27 +301,21 @@ auto Game::config() const noexcept -> const GameConfig& {
 [[nodiscard]]
 auto Game::load() noexcept -> Result<> {
     if (!_load) return {};
-    auto val = _load->operator()();
-    JS_FreeValue(_js.get(), val);
-    if (JS_HasException(_js.get())) return Err(error::from_js(_js.get(), JS_GetException(_js.get())));
+    if (auto r = _load->operator()(); !r) return err(r);
     return {};
 }
 
 [[nodiscard]]
 auto Game::update() noexcept -> Result<> {
     if (!_update) return {};
-    auto val = _update.value()();
-    JS_FreeValue(_js.get(), val);
-    if (JS_HasException(_js.get())) return Err(error::from_js(_js.get(), JS_GetException(_js.get())));
+    if (auto r = _update.value()(); !r) return err(r);
     return {};
 }
 
 [[nodiscard]]
 auto Game::draw() noexcept -> Result<> {
     if (!_draw) return {};
-    auto val = _draw.value()();
-    JS_FreeValue(_js.get(), val);
-    if (JS_HasException(_js.get())) return Err(error::from_js(_js.get(), JS_GetException(_js.get())));
+    if (auto r = _draw->operator()(); !r) return err(r);
     return {};
 }
 
@@ -332,33 +327,30 @@ auto Game::try_reload() noexcept -> Result<> try {
     if (_pre_reload) {
         SPDLOG_TRACE("Game has preReload, so calling it");
         auto r = _pre_reload->operator()();
-        if (JS_HasException(_js)) return Err(error::from_js(_js, JS_GetException(_js)));
-        state = js::Value(_js, r);
+        if (!r) return err(r);
+        state = std::move(*r);
     }
 
     SPDLOG_TRACE("Recreating game");
     auto game_result = Game::create(_js, _store);
-    if (!game_result) return Err(game_result.error());
+    if (!game_result) return err(game_result);
     auto new_game = std::move(*game_result);
 
     if (new_game._post_reload) {
         SPDLOG_TRACE("New game has postReload, so calling it");
-        auto r = JS_UNINITIALIZED;
         if (state) {
-            auto args = std::array {state->get()};
-            r = new_game._post_reload->operator()(args);
+            auto args = std::array {*state};
+            if (auto r = new_game._post_reload->operator()(args); !r) return err(r);
         } else {
-            r = new_game._post_reload->operator()();
+            if (auto r = new_game._post_reload->operator()(); !r) return err(r);
         }
-        if (JS_HasException(_js)) return Err(error::from_js(_js, JS_GetException(_js)));
-        JS_FreeValue(_js, r);
     }
 
     SPDLOG_TRACE("Successfully reloaded game");
     *this = std::move(new_game);
     return {};
 } catch (std::exception& e) {
-    return Err(error::create(e.what()));
+    return err(e);
 }
 
 Game::Game(InitParams p) noexcept :
@@ -382,22 +374,20 @@ extern "C" auto module_loader(JSContext *ctx, const char *module_name, void *opa
     }
 }
 
-auto read_config(JSContext *js, JSValue ns) -> Result<GameConfig> {
+auto read_config(js::Object& ns) -> Result<GameConfig> {
     GameConfig config {};
 
-    auto obj_result = js::try_get_property<std::optional<JSValue>>(js, ns, "config");
-    if (!obj_result) return Err(error::from_js(js, obj_result.error()));
-    auto obj_opt = *obj_result;
+    auto obj_result = ns.at<std::optional<js::Object>>("config");
+    if (!obj_result) return err(obj_result);
+    auto obj_opt = std::move(*obj_result);
     if (!obj_opt) return config;
-    auto obj = *obj_opt;
-    defer(JS_FreeValue(js, obj));
+    auto obj = std::move(*obj_opt);
 
-    if (!JS_IsObject(obj)) {
-        return Err(error::create("Game config must be object"));
+    if (auto title = obj.at<std::optional<std::string>>("title")) {
+        if (*title) config.title = **title;
+    } else {
+        return err(title);
     }
-
-    if (auto title = js::try_get_property<std::string>(js, obj, "title")) config.title = *title;
-    else return Err(error::from_js(js, title.error()));
 
     // TODO: other config fields
 

@@ -5,21 +5,26 @@
 #include <engine.hpp>
 #include <defer.hpp>
 
-namespace js {
-
-using muen::Err;
+namespace muen::js {
 
 template<>
-auto try_as<Font>(JSContext *js, JSValueConst value) -> std::expected<Font, JSValue> {
-    const auto id = class_id<&muen::plugins::graphics::font::CLASS>(js);
-    if (JS_IsObject(value) && id == JS_GetClassID(value)) {
-        return *static_cast<Font *>(JS_GetOpaque(value, id));
-    } else {
-        return Err(JS_NewTypeError(js, "Font must be object of class Font"));
+auto try_into<Font *>(const Value& val) noexcept -> JSResult<Font *> {
+    const auto id = class_id<&muen::plugins::graphics::font::CLASS>(val.ctx());
+    if (JS_GetClassID(val.cget()) == id) {
+        return static_cast<Font *>(JS_GetOpaque(val.cget(), id));
     }
+
+    return Unexpected(JSError::type_error(val.ctx(), "Not an instance of a Font"));
 }
 
-} // namespace js
+template<>
+auto try_into<Font>(const Value& val) noexcept -> JSResult<Font> {
+    auto ptr = try_into<Font *>(val);
+    if (ptr) return **ptr;
+    else return Unexpected(ptr.error());
+}
+
+} // namespace muen::js
 
 namespace muen::plugins::graphics::font {
 
@@ -127,7 +132,7 @@ static auto constructor(JSContext *js, JSValue this_val, int argc, JSValue *argv
 }
 
 static auto finalizer(JSRuntime *rt, JSValueConst this_val) -> void {
-    auto ptr = owner<Font*>{static_cast<Font *>(JS_GetOpaque(this_val, js::class_id<&CLASS>(rt)))};
+    auto ptr = owner<Font *> {static_cast<Font *>(JS_GetOpaque(this_val, js::class_id<&CLASS>(rt)))};
     UnloadFont(*ptr);
     delete ptr;
 }
@@ -138,8 +143,9 @@ static auto get_valid(JSContext *js, JSValueConst this_val) -> JSValue {
 }
 
 static auto to_string(JSContext *js, JSValueConst this_val, int, JSValueConst *) -> JSValue {
-    const auto font = js::try_as<Font>(js, this_val);
-    const auto str = to_string(*font);
+    const auto font = js::try_into<Font *>(js::borrow(js, this_val));
+    if (!font) return jsthrow(font.error());
+    const auto str = to_string(**font);
     return JS_NewStringLen(js, str.data(), str.size());
 }
 

@@ -1,34 +1,50 @@
 #pragma once
 
-#include <expected>
-
 #include <raylib.h>
 #include <spdlog/spdlog.h>
 
 #include <engine/plugin.hpp>
-#include <jsutil.hpp>
+#include <quickjs.hpp>
 
-namespace js {
-
-template<>
-auto try_as<Camera2D>(JSContext *js, JSValueConst value) -> std::expected<Camera2D, JSValue>;
+namespace muen::js {
 
 template<>
-auto try_as<Color>(JSContext *js, JSValueConst value) -> std::expected<Color, JSValue>;
+auto try_into<Camera2D *>(const Value& val) noexcept -> JSResult<Camera2D *>;
 
 template<>
-auto try_as<Font>(JSContext *js, JSValueConst value) -> std::expected<Font, JSValue>;
+auto try_into<Camera2D>(const Value& val) noexcept -> JSResult<Camera2D>;
 
 template<>
-auto try_as<NPatchInfo>(JSContext *js, JSValueConst value) -> std::expected<NPatchInfo, JSValue>;
+auto try_into<Color *>(const Value& val) noexcept -> JSResult<Color *>;
 
 template<>
-auto try_as<Texture>(JSContext *js, JSValueConst value) -> std::expected<Texture, JSValue>;
+auto try_into<Color>(const Value& val) noexcept -> JSResult<Color>;
 
 template<>
-auto try_as<RenderTexture>(JSContext *js, JSValueConst value) -> std::expected<RenderTexture, JSValue>;
+auto try_into<Font *>(const Value& val) noexcept -> JSResult<Font *>;
 
-} // namespace js
+template<>
+auto try_into<Font>(const Value& val) noexcept -> JSResult<Font>;
+
+template<>
+auto try_into<NPatchInfo *>(const Value& val) noexcept -> JSResult<NPatchInfo *>;
+
+template<>
+auto try_into<NPatchInfo>(const Value& val) noexcept -> JSResult<NPatchInfo>;
+
+template<>
+auto try_into<Texture *>(const Value& val) noexcept -> JSResult<Texture *>;
+
+template<>
+auto try_into<Texture>(const Value& val) noexcept -> JSResult<Texture>;
+
+template<>
+auto try_into<RenderTexture *>(const Value& val) noexcept -> JSResult<RenderTexture *>;
+
+template<>
+auto try_into<RenderTexture>(const Value& val) noexcept -> JSResult<RenderTexture>;
+
+} // namespace muen::js
 
 namespace muen::plugins::graphics {
 
@@ -60,13 +76,13 @@ namespace npatch {
 } // namespace npatch
 
 namespace render_texture {
-    extern const JSClassDef CLASS;
+    extern const JSClassDef RENDER_TEXTURE;
     auto module(JSContext *js) -> JSModuleDef *;
     auto to_string(RenderTexture texture) -> std::string;
 } // namespace render_texture
 
 namespace texture {
-    extern const JSClassDef CLASS;
+    extern const JSClassDef TEXTURE;
     auto module(JSContext *js) -> JSModuleDef *;
     auto to_string(Texture texture) -> std::string;
 } // namespace texture

@@ -27,7 +27,7 @@ ImplementationFileExtensions:
   - cc
   - cpp
   - cxx
-HeaderFilterRegex: ''
+HeaderFilterRegex: 'src/.*'
 ExcludeHeaderFilterRegex: ''
 FormatStyle:     none
 User:            albert

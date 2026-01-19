@@ -1,32 +1,36 @@
 #include "./audio.hpp"
 
-#include <cstring>
 #include <algorithm>
+#include <gsl/gsl>
+
+#include <spdlog/spdlog.h>
 
 namespace muen::engine::audio::music {
 
+using namespace gsl;
+
 auto load(const std::filesystem::path& name, std::span<char> data) noexcept -> Result<owner<Music *>> {
-    const auto raylib_music = LoadMusicStreamFromMemory(
-        name.extension().string().c_str(),
-        // NOLINTNEXTLINE: Casting from char* to unsigned char* is explicitly allowed by the standard
-        reinterpret_cast<unsigned char *>(data.data()),
-        int(data.size())
-    );
+    auto buf = owner<unsigned char *>(new (std::nothrow) unsigned char[data.size()]);
+    std::ranges::copy(data, buf);
+
+    const auto raylib_music = LoadMusicStreamFromMemory(name.extension().string().c_str(), buf, int(data.size()));
 
     if (!IsMusicValid(raylib_music)) {
-        return Err(error::create("Error loading music"));
+        return err("Error loading music");
     }
+    auto music = Music {.music = raylib_music, .data = buf};
 
-    const auto music = Music {.music = raylib_music};
     SetMusicVolume(music.music, music.volume);
     SetMusicPan(music.music, music.pan);
     SetMusicPitch(music.music, music.pitch);
+    auto ptr = owner<Music *>(new (std::nothrow) Music {music});
 
-    return {owner<Music *>(new (std::nothrow) Music {music})};
+    return {ptr};
 }
 
 auto unload(owner<Music *> self) noexcept -> void {
     UnloadMusicStream(self->music);
+    delete self->data;
     delete self;
 }
 

@@ -6,7 +6,7 @@
 #include <gsl/gsl>
 #include <spdlog/spdlog.h>
 
-#include <jsutil.hpp>
+#include <quickjs.hpp>
 #include <types.hpp>
 #include <engine/plugin.hpp>
 #include <error.hpp>
@@ -33,8 +33,8 @@ class Engine {
     not_null<std::unique_ptr<JSRuntime, JSRuntime_deleter>> _js_runtime;
     not_null<std::unique_ptr<JSContext, JSContext_deleter>> _js_context;
     not_null<std::unique_ptr<IFileStore>> _store;
-    std::unordered_map<std::string, std::string> _js_modules {};
-    std::unordered_map<std::string, JSModuleDef *> _c_modules {};
+    std::unordered_map<std::filesystem::path, std::string> _js_modules {};
+    std::unordered_map<std::filesystem::path, JSModuleDef *> _c_modules {};
     std::vector<std::function<auto()->Result<>>> _load_callbacks {};
     std::vector<std::function<auto()->Result<>>> _unload_callbacks {};
     std::vector<std::function<auto()->Result<>>> _update_callbacks {};

@@ -1,3 +1,5 @@
+#pragma once
+
 using JSRuntime = struct JSRuntime;
 using JSContext = struct JSContext;
 using JSValue = struct JSValue;

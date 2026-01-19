@@ -16,6 +16,7 @@ using namespace gsl;
 namespace music {
     struct Music {
         ::Music music {};
+        not_null<unsigned char *> data;
         float volume = 1.0f;
         float pitch = 1.0f;
         float pan = 0.5f;

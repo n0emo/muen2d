@@ -2,35 +2,35 @@
 
 #include <array>
 #include <cassert>
+#include <gsl/gsl>
 
 #include <spdlog/spdlog.h>
 
 #include <engine.hpp>
 
+namespace muen::js {
+
+template<>
+auto try_into<engine::audio::Sound *>(const Value& val) noexcept -> JSResult<engine::audio::Sound *> {
+    const auto id = class_id<&plugins::audio::sound_class::SOUND>(val.ctx());
+    auto ptr = static_cast<engine::audio::Sound *>(JS_GetOpaque(val.cget(), id));
+    if (ptr == nullptr) return Unexpected(JSError::type_error(val.ctx(), "Not an instance of Sound"));
+    return ptr;
+}
+
+} // namespace muen::js
+
 namespace muen::plugins::audio::sound_class {
+
+using namespace gsl;
 
 namespace audio = engine::audio;
 namespace sound = engine::audio::sound;
 
-auto sound_class_id(JSContext *js) -> JSClassID {
-    static const auto id = [](auto js) -> JSClassID {
-        auto id = JSClassID {};
-        JS_NewClassID(JS_GetRuntime(js), &id);
-        return id;
-    }(js);
-
-    return id;
-}
-
-auto from_value_unsafe(JSContext *js, JSValueConst val) -> audio::Sound * {
-    auto sound = static_cast<audio::Sound *>(JS_GetOpaque(val, sound_class_id(js)));
-    return sound;
-}
-
 static auto sound_constructor(JSContext *js, JSValue new_target, int argc, JSValue *argv) -> JSValue {
     auto& e = Engine::get(js);
     auto args = js::unpack_args<std::string>(js, argc, argv);
-    if (!args) return JS_Throw(js, args.error());
+    if (!args) return jsthrow(args.error());
     const auto [filename] = *args;
     auto data = e.store().read_bytes(filename);
     if (!data)
@@ -43,7 +43,7 @@ static auto sound_constructor(JSContext *js, JSValue new_target, int argc, JSVal
     audio::get().sounds.insert(*result);
 
     auto proto = JS_GetPropertyStr(js, new_target, "prototype");
-    auto obj = JS_NewObjectProtoClass(js, proto, sound_class_id(js));
+    auto obj = JS_NewObjectProtoClass(js, proto, js::class_id<&SOUND>(js));
     JS_FreeValue(js, proto);
 
     JS_SetOpaque(obj, *result);
@@ -51,79 +51,76 @@ static auto sound_constructor(JSContext *js, JSValue new_target, int argc, JSVal
     return obj;
 }
 
-static auto sound_unload(JSContext *js, JSValueConst this_val, int argc, JSValueConst *) -> JSValue {
-    if (argc != 0) {
-        return JS_ThrowTypeError(js, "Sound.unload expects no arguments, but %d were given", argc);
-    }
-
-    auto s = from_value_unsafe(js, this_val);
-    audio::get().sounds.erase(s);
-    sound::unload(owner<audio::Sound *> {s});
+static auto sound_unload(JSContext *js, JSValueConst this_val, int, JSValueConst *) -> JSValue {
+    auto s = js::try_into<audio::Sound *>(js::borrow(js, this_val));
+    if (!s) return jsthrow(s.error());
+    audio::get().sounds.erase(*s);
+    sound::unload(owner<audio::Sound *> {*s});
     return JS_UNDEFINED;
 }
 
-static auto sound_play(JSContext *js, JSValueConst this_val, int argc, JSValueConst *) -> JSValue {
-    if (argc != 0) {
-        return JS_ThrowTypeError(js, "Sound.play expects no arguments, but %d were given", argc);
-    }
-
-    auto s = from_value_unsafe(js, this_val);
-    sound::play(*s);
+static auto sound_play(JSContext *js, JSValueConst this_val, int, JSValueConst *) -> JSValue {
+    auto s = js::try_into<audio::Sound *>(js::borrow(js, this_val));
+    if (!s) return jsthrow(s.error());
+    sound::play(**s);
     return JS_UNDEFINED;
 }
 
-static auto sound_stop(JSContext *js, JSValueConst this_val, int argc, JSValueConst *) -> JSValue {
-    if (argc != 0) {
-        return JS_ThrowTypeError(js, "Sound.stop expects no arguments, but %d were given", argc);
-    }
-
-    auto s = from_value_unsafe(js, this_val);
-    sound::stop(*s);
+static auto sound_stop(JSContext *js, JSValueConst this_val, int, JSValueConst *) -> JSValue {
+    auto s = js::try_into<audio::Sound *>(js::borrow(js, this_val));
+    if (!s) return jsthrow(s.error());
+    sound::stop(**s);
     return JS_UNDEFINED;
 }
 
 static auto sound_get_playing(JSContext *js, JSValueConst this_val) -> JSValue {
-    auto s = from_value_unsafe(js, this_val);
-    return JS_NewBool(js, sound::is_playing(*s));
+    auto s = js::try_into<audio::Sound *>(js::borrow(js, this_val));
+    if (!s) return jsthrow(s.error());
+    return JS_NewBool(js, sound::is_playing(**s));
 }
 
 static auto sound_get_volume(JSContext *js, JSValueConst this_val) -> JSValue {
-    auto s = from_value_unsafe(js, this_val);
-    return JS_NewFloat64(js, sound::get_volume(*s));
+    auto s = js::try_into<audio::Sound *>(js::borrow(js, this_val));
+    if (!s) return jsthrow(s.error());
+    return JS_NewFloat64(js, sound::get_volume(**s));
 }
 
 static auto sound_get_pan(JSContext *js, JSValueConst this_val) -> JSValue {
-    auto s = from_value_unsafe(js, this_val);
-    return JS_NewFloat64(js, sound::get_pan(*s));
+    auto s = js::try_into<audio::Sound *>(js::borrow(js, this_val));
+    if (!s) return jsthrow(s.error());
+    return JS_NewFloat64(js, sound::get_pan(**s));
 }
 
 static auto sound_get_pitch(JSContext *js, JSValueConst this_val) -> JSValue {
-    auto s = from_value_unsafe(js, this_val);
-    return JS_NewFloat64(js, sound::get_pitch(*s));
+    auto s = js::try_into<audio::Sound *>(js::borrow(js, this_val));
+    if (!s) return jsthrow(s.error());
+    return JS_NewFloat64(js, sound::get_pitch(**s));
 }
 
-// Setters
 static auto sound_set_volume(JSContext *js, JSValueConst this_val, JSValueConst val) -> JSValue {
-    double volume = 0;
-    JS_ToFloat64(js, &volume, val);
-    auto s = from_value_unsafe(js, this_val);
-    sound::set_volume(*s, static_cast<float>(volume));
+    auto s = js::try_into<audio::Sound *>(js::borrow(js, this_val));
+    if (!s) return jsthrow(s.error());
+    auto volume = js::try_into<float>(js::borrow(js, val));
+    if (!volume) return jsthrow(volume.error());
+    sound::set_volume(**s, *volume);
     return JS_UNDEFINED;
 }
 
 static auto sound_set_pan(JSContext *js, JSValueConst this_val, JSValueConst val) -> JSValue {
-    double pan = 0;
-    JS_ToFloat64(js, &pan, val);
-    auto s = from_value_unsafe(js, this_val);
-    sound::set_pan(*s, static_cast<float>(pan));
+    auto s = js::try_into<audio::Sound *>(js::borrow(js, this_val));
+    if (!s) return jsthrow(s.error());
+    auto pan = js::try_into<float>(js::borrow(js, val));
+    if (!pan) return jsthrow(pan.error());
+    sound::set_pan(**s, *pan);
     return JS_UNDEFINED;
 }
 
 static auto sound_set_pitch(JSContext *js, JSValueConst this_val, JSValueConst val) -> JSValue {
-    double pitch = 0;
-    JS_ToFloat64(js, &pitch, val);
-    auto s = from_value_unsafe(js, this_val);
-    sound::set_pitch(*s, static_cast<float>(pitch));
+    auto s = js::try_into<audio::Sound *>(js::borrow(js, this_val));
+    if (!s) return jsthrow(s.error());
+    auto pitch = js::try_into<float>(js::borrow(js, val));
+    if (!pitch) return jsthrow(pitch.error());
+    sound::set_pitch(**s, *pitch);
     return JS_UNDEFINED;
 }
 
@@ -147,11 +144,12 @@ static const auto SOUND_CLASS = JSClassDef {
 
 auto module(JSContext *js) -> JSModuleDef * {
     auto m = JS_NewCModule(js, "muen:sound", [](auto js, auto m) -> int {
-        JS_NewClass(JS_GetRuntime(js), sound_class_id(js), &SOUND_CLASS);
+        const auto id = js::class_id<&SOUND>(js);
+        JS_NewClass(JS_GetRuntime(js), id, &SOUND_CLASS);
 
         JSValue proto = JS_NewObject(js);
         JS_SetPropertyFunctionList(js, proto, PROTO_FUNCS.data(), int {PROTO_FUNCS.size()});
-        JS_SetClassProto(js, sound_class_id(js), proto);
+        JS_SetClassProto(js, id, proto);
 
         JSValue ctor = JS_NewCFunction2(js, sound_constructor, "Sound", 1, JS_CFUNC_constructor, 0);
         JS_SetConstructor(js, ctor, proto);

@@ -44,7 +44,6 @@ jobs:
           build-cache-key: xmake
           package-cache: true
           package-cache-key: xmake
-          project-path: 'tests/sample'
 
       - name: Build engine
         run: |

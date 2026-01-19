@@ -21,7 +21,7 @@ target("muen", function()
 		"src/engine.cpp",
 		"src/error.cpp",
 		"src/file_store.cpp",
-		"src/jsutil.cpp",
+		"src/quickjs.cpp",
 		"src/main.cpp",
 		"src/plugins/*.cpp"
 	)

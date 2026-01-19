@@ -16,7 +16,7 @@ auto load(const std::filesystem::path& name, std::span<char> data) noexcept -> R
     UnloadWave(raylib_wave);
 
     if (!::IsSoundValid(raylib_sound)) {
-        return Err(error::create("Error loading sound"));
+        return err("Error loading sound");
     }
 
     const auto sound = Sound {.sound = raylib_sound};
@@ -24,10 +24,10 @@ auto load(const std::filesystem::path& name, std::span<char> data) noexcept -> R
     ::SetSoundPan(sound.sound, sound.pan);
     ::SetSoundPitch(sound.sound, sound.pitch);
 
-    return {owner<Sound*>{new(std::nothrow) Sound {sound}}};
+    return {owner<Sound *> {new (std::nothrow) Sound {sound}}};
 }
 
-auto unload(owner<Sound *>self) noexcept -> void {
+auto unload(owner<Sound *> self) noexcept -> void {
     if (self == nullptr) {
         return;
     }
