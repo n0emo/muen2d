@@ -1,5 +1,7 @@
 #include <plugins/audio.hpp>
 
+#include <spdlog/spdlog.h>
+
 namespace muen::plugins::audio {
 
 auto plugin(JSContext *js) -> EnginePlugin {

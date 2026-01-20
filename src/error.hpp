@@ -7,18 +7,20 @@
 #include <string>
 #include <variant>
 
-#include <quickjs.h>
+#include <gsl/gsl>
 
+#include <types.hpp>
 #include <defer.hpp>
-#include <jsutil.hpp>
 
 namespace muen::error {
+
+using namespace gsl;
 
 /// Generic error interface
 class IError {
   public:
     [[nodiscard]]
-    virtual auto msg() const noexcept -> std::string_view;
+    virtual auto msg() const noexcept -> std::string;
 
     [[nodiscard]]
     virtual auto loc() const noexcept -> std::optional<std::source_location>;
@@ -28,13 +30,12 @@ class IError {
     [[nodiscard]]
     auto loc_str() const noexcept -> std::optional<std::string>;
 
-    IError(const IError&) = delete;
-    IError(IError&&) = delete;
-    auto operator=(const IError&) -> IError& = delete;
-    auto operator=(IError&&) -> IError& = delete;
-
   protected:
     IError() = default;
+    IError(const IError&) = default;
+    IError(IError&&) = default;
+    auto operator=(const IError&) -> IError& = default;
+    auto operator=(IError&&) -> IError& = default;
 };
 
 /// Error containing message as string
@@ -47,50 +48,49 @@ class StringError: public IError {
     StringError(std::string msg, std::source_location loc = std::source_location::current()) noexcept;
 
     [[nodiscard]]
-    auto msg() const noexcept -> std::string_view override;
+    auto msg() const noexcept -> std::string override;
 
     [[nodiscard]]
     auto loc() const noexcept -> std::optional<std::source_location> override;
+
+    ~StringError() override = default;
+    StringError(const StringError&) = default;
+    StringError(StringError&&) = default;
+    auto operator=(const StringError&) -> StringError& = default;
+    auto operator=(StringError&&) -> StringError& = default;
 };
 
-class JsError: public IError {
+class StdError: public IError {
   private:
-    JSContext *_js;
-    JSValue _value;
+    not_null<const std::exception *> _exception;
     std::source_location _loc;
-    std::shared_ptr<std::string> _msg;
 
   public:
-    JsError(JSContext *js, JSValue value, std::source_location loc = std::source_location::current()) noexcept;
-    ~JsError() noexcept override;
-    JsError(const JsError& other) noexcept;
-    JsError(JsError&& other) noexcept;
-    auto operator=(const JsError& other) noexcept -> JsError&;
-    auto operator=(JsError&& other) noexcept -> JsError&;
+    StdError(const std::exception& e, std::source_location loc);
 
     [[nodiscard]]
-    auto msg() const noexcept -> std::string_view override;
+    auto msg() const noexcept -> std::string override;
 
     [[nodiscard]]
     auto loc() const noexcept -> std::optional<std::source_location> override;
 
     [[nodiscard]]
-    auto value() const noexcept -> JSValueConst;
+    auto exception() const noexcept -> const std::exception&;
 
-    [[nodiscard]]
-    auto str() const noexcept -> std::optional<std::string>;
-
-    [[nodiscard]]
-    auto stack() const noexcept -> std::optional<std::string>;
+    ~StdError() override = default;
+    StdError(const StdError&) = default;
+    StdError(StdError&&) = default;
+    auto operator=(const StdError&) -> StdError& = default;
+    auto operator=(StdError&&) -> StdError& = default;
 };
 
 using Error = std::shared_ptr<IError>;
 
-template<typename T = std::monostate, typename E = Error>
-using Result = std::expected<T, Error>;
-
 template<typename E>
-using Err = std::unexpected<E>;
+using Unexpected = std::unexpected<E>;
+
+template<typename T = std::monostate, typename E = Error>
+using Result = std::expected<T, E>;
 
 /// Create new error
 [[nodiscard]]
@@ -98,27 +98,32 @@ auto create(std::string msg, std::source_location loc = std::source_location::cu
 
 /// Create new error and return raw pointer
 [[nodiscard]]
-auto create_ptr(std::string msg = "", std::source_location loc = std::source_location::current()) noexcept -> IError *;
+auto create_ptr(std::string msg = "", std::source_location loc = std::source_location::current()) noexcept
+    -> owner<IError *>;
 
 /// Free raw pointer to error
-auto free_ptr(IError *e) noexcept -> void;
-
-/// Create error from JS Value
-[[nodiscard]]
-auto from_js(JSContext *js, JSValue value, std::source_location loc = std::source_location::current()) noexcept
-    -> Error;
-
-/// Create new error from JS Value and return raw pointer
-[[nodiscard]]
-auto from_js_ptr(JSContext *js, JSValue value, std::source_location loc = std::source_location::current()) noexcept
-    -> IError *;
+auto free_ptr(owner<IError *> e) noexcept -> void;
 
 } // namespace muen::error
 
 namespace muen {
 
-using error::Err;
 using error::Error;
 using error::Result;
+using error::Unexpected;
+
+[[nodiscard]]
+auto err(Error e) noexcept -> Unexpected<Error>;
+
+[[nodiscard]]
+auto err(std::string msg, std::source_location loc = std::source_location::current()) noexcept -> Unexpected<Error>;
+
+[[nodiscard]]
+auto err(std::exception& e, std::source_location loc = std::source_location::current()) noexcept -> Unexpected<Error>;
+
+template<typename T, typename E>
+auto err(const Result<T, E>& r) noexcept -> Unexpected<E> {
+    return Unexpected(r.error());
+}
 
 } // namespace muen

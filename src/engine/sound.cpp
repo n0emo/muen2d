@@ -4,10 +4,19 @@
 
 namespace muen::engine::audio::sound {
 
-auto load(const std::string& path) -> Result<Sound*> {
-    const auto raylib_sound = ::LoadSound(path.c_str());
+auto load(const std::filesystem::path& name, std::span<char> data) noexcept -> Result<owner<Sound *>> {
+    const auto raylib_wave = LoadWaveFromMemory(
+        name.extension().string().c_str(),
+        // NOLINTNEXTLINE: Casting from char* to unsigned char* is explicitly allowed by the standard
+        reinterpret_cast<unsigned char *>(data.data()),
+        int(data.size())
+    );
+
+    const auto raylib_sound = LoadSoundFromWave(raylib_wave);
+    UnloadWave(raylib_wave);
+
     if (!::IsSoundValid(raylib_sound)) {
-        return Err(error::create("Error loading sound"));
+        return err("Error loading sound");
     }
 
     const auto sound = Sound {.sound = raylib_sound};
@@ -15,63 +24,63 @@ auto load(const std::string& path) -> Result<Sound*> {
     ::SetSoundPan(sound.sound, sound.pan);
     ::SetSoundPitch(sound.sound, sound.pitch);
 
-    return new Sound{sound};
+    return {owner<Sound *> {new (std::nothrow) Sound {sound}}};
 }
 
-auto unload(Sound* self) -> void {
+auto unload(owner<Sound *> self) noexcept -> void {
     if (self == nullptr) {
         return;
     }
 
-    ::UnloadSound(self->sound);
+    UnloadSound(self->sound);
     delete self;
 }
 
-auto play(Sound& self) -> void {
-    ::PlaySound(self.sound);
+auto play(Sound& self) noexcept -> void {
+    PlaySound(self.sound);
 }
 
-auto stop(Sound& self) -> void {
-    ::StopSound(self.sound);
+auto stop(Sound& self) noexcept -> void {
+    StopSound(self.sound);
 }
 
-auto pause(Sound& self) -> void {
-    ::PauseSound(self.sound);
+auto pause(Sound& self) noexcept -> void {
+    PauseSound(self.sound);
 }
 
-auto resume(Sound& self) -> void {
-    ::ResumeSound(self.sound);
+auto resume(Sound& self) noexcept -> void {
+    ResumeSound(self.sound);
 }
 
-auto is_playing(Sound& self) -> bool {
-    return ::IsSoundPlaying(self.sound);
+auto is_playing(Sound& self) noexcept -> bool {
+    return IsSoundPlaying(self.sound);
 }
 
-auto get_volume(Sound& self) -> float {
+auto get_volume(Sound& self) noexcept -> float {
     return self.volume;
 }
 
-auto set_volume(Sound& self, float volume) -> void {
+auto set_volume(Sound& self, float volume) noexcept -> void {
     self.volume = std::clamp(volume, 0.0f, 1.0f);
-    ::SetSoundVolume(self.sound, self.volume);
+    SetSoundVolume(self.sound, self.volume);
 }
 
-auto get_pan(Sound& self) -> float {
+auto get_pan(Sound& self) noexcept -> float {
     return self.pan;
 }
 
-auto set_pan(Sound& self, float pan) -> void {
+auto set_pan(Sound& self, float pan) noexcept -> void {
     self.pan = std::clamp(pan, 0.0f, 1.0f);
-    ::SetSoundPan(self.sound, self.pan);
+    SetSoundPan(self.sound, self.pan);
 }
 
-auto get_pitch(Sound& self) -> float {
+auto get_pitch(Sound& self) noexcept -> float {
     return self.pitch;
 }
 
-auto set_pitch(Sound& self, float pitch) -> void {
+auto set_pitch(Sound& self, float pitch) noexcept -> void {
     self.pitch = pitch;
-    ::SetSoundPitch(self.sound, pitch);
+    SetSoundPitch(self.sound, pitch);
 }
 
-} // namespace muen::plugins::audio::sound
+} // namespace muen::engine::audio::sound

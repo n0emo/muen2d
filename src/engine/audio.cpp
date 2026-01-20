@@ -4,16 +4,16 @@
 
 namespace muen::engine::audio {
 
-auto init() -> void {
-    ::InitAudioDevice();
+auto init() noexcept -> void {
+    InitAudioDevice();
 }
 
-auto close() -> void {
+auto close() noexcept -> void {
     // TODO: free sounds
-    ::CloseAudioDevice();
+    CloseAudioDevice();
 }
 
-auto get() -> Audio& {
+auto get() noexcept -> Audio& {
     static auto audio = Audio {};
     return audio;
 }

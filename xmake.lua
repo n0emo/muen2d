@@ -1,10 +1,12 @@
 add_rules("mode.debug", "mode.release")
 add_rules("plugin.compile_commands.autoupdate", { outputdir = "build" })
 
+add_requires("fmt", { configs = { header_only = false } })
+add_requires("libzip v1.11.4")
+add_requires("microsoft-gsl v4.2.1")
 add_requires("quickjs-ng v0.11.0", { alias = "quickjs", configs = { debug = true } })
 add_requires("raylib 5.5")
 add_requires("spdlog 1.16.0", { configs = { header_only = false, fmt_external = true } })
-add_requires("fmt", { configs = { header_only = false } })
 
 set_languages({ "c++23", "c11" })
 set_warnings("all", "extra")
@@ -13,14 +15,21 @@ if is_plat("windows") then
 	add_defines("_CRT_SECURE_NO_WARNINGS")
 end
 
-target("muen", function ()
+target("muen", function()
 	set_kind("binary")
-	add_files("src/engine.cpp", "src/error.cpp", "src/jsutil.cpp", "src/main.cpp", "src/plugins/*.cpp")
+	add_files(
+		"src/engine.cpp",
+		"src/error.cpp",
+		"src/file_store.cpp",
+		"src/quickjs.cpp",
+		"src/main.cpp",
+		"src/plugins/*.cpp"
+	)
 	add_files("src/**.js")
 	add_includedirs("src", { public = true })
 	add_headerfiles("src/(**.hpp)")
 	add_headerfiles("src/(**.h)")
-	add_packages({ "quickjs", "spdlog", "raylib" })
+	add_packages({ "quickjs", "fmt", "libzip", "spdlog", "raylib", "microsoft-gsl" })
 	add_defines("SPDLOG_COMPILED_LIB")
 	add_defines("SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_TRACE")
 	add_rules("utils.bin2c", { extensions = ".js" })

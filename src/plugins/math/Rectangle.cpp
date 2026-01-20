@@ -1,72 +1,56 @@
 #include <plugins/math.hpp>
 
 #include <array>
+#include <gsl/gsl>
 
 #include <fmt/format.h>
 #include <raylib.h>
 
 #include <defer.hpp>
 
-namespace muen::plugins::math::rectangle {
+namespace muen::js {
 
-auto class_id(JSContext *js) -> ::JSClassID {
-    return class_id(JS_GetRuntime(js));
-}
-
-auto class_id(JSRuntime *rt) -> ::JSClassID {
-    static const auto id = [](auto rt) -> ::JSClassID {
-        auto id = ::JSClassID {};
-        ::JS_NewClassID(rt, &id);
-        return id;
-    }(rt);
-    return id;
-}
-
-auto from_value(::JSContext *js, ::JSValueConst val) -> std::expected<::Rectangle, ::JSValue> {
-    const auto id = class_id(js);
-    if (JS_GetClassID(val) == id) {
-        const auto ptr = static_cast<::Rectangle *>(JS_GetOpaque(val, id));
-        return *ptr;
+template<>
+auto try_into<Rectangle *>(const Value& val) noexcept -> JSResult<Rectangle *> {
+    const auto id = class_id<&plugins::math::rectangle::RECTANGLE>(val.ctx());
+    if (JS_GetClassID(val.cget()) == id) {
+        const auto ptr = static_cast<::Rectangle *>(JS_GetOpaque(val.cget(), id));
+        return ptr;
     }
+
+    return Unexpected(JSError::type_error(val.ctx(), "Not an instance of Rectangle"));
+}
+
+template<>
+auto try_into<Rectangle>(const Value& val) noexcept -> JSResult<Rectangle> {
+    if (auto r = try_into<Rectangle *>(val)) return **r;
 
     auto rec = ::Rectangle {};
+    auto obj = Object::from_value(val);
+    if (!obj) return Unexpected(obj.error());
 
-    if (auto v = js::try_get_property<float>(js, val, "x")) rec.x = *v;
-    else return Err(v.error());
-    if (auto v = js::try_get_property<float>(js, val, "y")) rec.y = *v;
-    else return Err(v.error());
-    if (auto v = js::try_get_property<float>(js, val, "width")) rec.width = *v;
-    else return Err(v.error());
-    if (auto v = js::try_get_property<float>(js, val, "height")) rec.height = *v;
-    else return Err(v.error());
+    if (auto v = obj->at<float>("x")) rec.x = *v;
+    else return Unexpected(v.error());
+    if (auto v = obj->at<float>("y")) rec.y = *v;
+    else return Unexpected(v.error());
+    if (auto v = obj->at<float>("width")) rec.width = *v;
+    else return Unexpected(v.error());
+    if (auto v = obj->at<float>("height")) rec.height = *v;
+    else return Unexpected(v.error());
 
-    if (JS_HasException(js)) {
-        return Err(JS_GetException(js));
-    } else {
-        return rec;
-    }
+    return rec;
 }
 
-auto pointer_from_value(::JSContext *js, ::JSValueConst val) -> ::Rectangle * {
-    return static_cast<Rectangle *>(JS_GetOpaque(val, class_id(js)));
-}
+} // namespace muen::js
 
-static auto constructor(JSContext *js, JSValue new_target, int argc, JSValue *argv) -> JSValue {
-    if (argc != 4) {
-        return JS_ThrowTypeError(js, "Rectangle constructor expects 4 arguments but %d were provided", argc);
-    }
+namespace muen::plugins::math::rectangle {
 
-    for (int i = 0; i < argc; i++) {
-        if (!::JS_IsNumber(argv[i])) {
-            return JS_ThrowTypeError(js, "Rectangle constructor accepts only numbers");
-        }
-    }
+using namespace gsl;
 
-    auto x = double {}, y = double {}, width = double {}, height = double {};
-    ::JS_ToFloat64(js, &x, argv[0]);
-    ::JS_ToFloat64(js, &y, argv[1]);
-    ::JS_ToFloat64(js, &width, argv[2]);
-    ::JS_ToFloat64(js, &height, argv[3]);
+static auto constructor(JSContext *js, JSValueConst new_target, int argc, JSValueConst *argv) -> JSValue {
+    auto args = js::unpack_args<float, float, float, float>(js, argc, argv);
+    if (!args) return jsthrow(args.error());
+    const auto [x, y, width, height] = *args;
 
     auto proto = JS_GetPropertyStr(js, new_target, "prototype");
     if (JS_IsException(proto)) {
@@ -74,153 +58,136 @@ static auto constructor(JSContext *js, JSValue new_target, int argc, JSValue *ar
     }
     defer(JS_FreeValue(js, proto));
 
-    auto obj = JS_NewObjectProtoClass(js, proto, class_id(js));
+    auto obj = JS_NewObjectProtoClass(js, proto, js::class_id<&RECTANGLE>(js));
     if (JS_HasException(js)) {
         JS_FreeValue(js, obj);
         return JS_GetException(js);
     }
 
-    auto rec = new Rectangle {
-        .x = float(x),
-        .y = float(y),
-        .width = float(width),
-        .height = float(height),
-    };
+    auto rec = owner<Rectangle *>(new Rectangle {.x = x, .y = y, .width = width, .height = height});
     JS_SetOpaque(obj, rec);
     return obj;
 }
 
 static auto finalizer(JSRuntime *rt, JSValue val) {
-    auto ptr = static_cast<Rectangle *>(JS_GetOpaque(val, class_id(rt)));
+    auto ptr = owner<Rectangle *>(JS_GetOpaque(val, js::class_id<&RECTANGLE>(rt)));
     delete ptr;
 }
 
-static auto zero(JSContext *js, JSValueConst, int, JSValue *) -> JSValue {
+static auto zero(JSContext *js, JSValueConst, int, JSValueConst *) -> JSValue {
     // TODO: maybe we should get proto from this_value?
-    auto obj = JS_NewObjectClass(js, class_id(js));
-    auto rec = new Rectangle {.x = 0, .y = 0, .width = 0, .height = 0};
+    auto obj = JS_NewObjectClass(js, js::class_id<&RECTANGLE>(js));
+    auto rec = owner<Rectangle *>(new Rectangle {.x = 0, .y = 0, .width = 0, .height = 0});
     JS_SetOpaque(obj, rec);
     return obj;
 }
 
-static auto from_vectors(JSContext *js, JSValueConst, int argc, JSValue *argv) -> JSValue {
+static auto from_vectors(JSContext *js, JSValueConst, int argc, JSValueConst *argv) -> JSValue {
     // TODO: maybe we should get proto from this_value?
 
-    if (argc != 2) {
-        return JS_ThrowTypeError(js, "Rectangle.fromVectors expects 2 arguments, but %d were provided", argc);
-    }
-
-    auto pos = vector2::from_value(js, argv[0]);
-    if (!pos.has_value()) {
-        return pos.error();
-    }
-    auto size = vector2::from_value(js, argv[1]);
-    if (!size.has_value()) {
-        return size.error();
-    }
+    auto args = js::unpack_args<Vector2, Vector2>(js, argc, argv);
+    if (!args) return jsthrow(args.error());
+    const auto [pos, size] = *args;
 
     // TODO: maybe we should get proto from this_value?
-    auto obj = JS_NewObjectClass(js, class_id(js));
-    auto rec = new Rectangle {
-        .x = pos->x,
-        .y = pos->y,
-        .width = size->x,
-        .height = size->y,
-    };
+    auto obj = JS_NewObjectClass(js, js::class_id<&RECTANGLE>(js));
+    auto rec = owner<Rectangle *>(new Rectangle {
+        .x = pos.x,
+        .y = pos.y,
+        .width = size.x,
+        .height = size.y,
+    });
     JS_SetOpaque(obj, rec);
     return obj;
 }
 
-static auto get_x(::JSContext *js, ::JSValueConst this_val) -> ::JSValue {
-    auto rec = pointer_from_value(js, this_val);
-    return ::JS_NewFloat64(js, rec->x);
+static auto get_x(JSContext *js, JSValueConst this_val) -> JSValue {
+    auto rec = js::try_into<Rectangle>(js::Value::borrowed(js, this_val));
+    if (!rec) return jsthrow(rec.error());
+    return JS_NewFloat64(js, rec->x);
 }
 
-static auto get_y(::JSContext *js, ::JSValueConst this_val) -> ::JSValue {
-    auto rec = pointer_from_value(js, this_val);
-    return ::JS_NewFloat64(js, rec->y);
+static auto get_y(JSContext *js, JSValueConst this_val) -> JSValue {
+    auto rec = js::try_into<Rectangle>(js::Value::borrowed(js, this_val));
+    if (!rec) return jsthrow(rec.error());
+    return JS_NewFloat64(js, rec->y);
 }
 
-static auto get_width(::JSContext *js, ::JSValueConst this_val) -> ::JSValue {
-    auto rec = pointer_from_value(js, this_val);
-    return ::JS_NewFloat64(js, rec->width);
+static auto get_width(JSContext *js, JSValueConst this_val) -> JSValue {
+    auto rec = js::try_into<Rectangle>(js::Value::borrowed(js, this_val));
+    if (!rec) return jsthrow(rec.error());
+    return JS_NewFloat64(js, rec->width);
 }
 
-static auto get_height(::JSContext *js, ::JSValueConst this_val) -> ::JSValue {
-    auto rec = pointer_from_value(js, this_val);
-    return ::JS_NewFloat64(js, rec->height);
+static auto get_height(JSContext *js, JSValueConst this_val) -> JSValue {
+    auto rec = js::try_into<Rectangle>(js::Value::borrowed(js, this_val));
+    if (!rec) return jsthrow(rec.error());
+    return JS_NewFloat64(js, rec->height);
 }
 
-static auto set_x(::JSContext *js, ::JSValueConst this_val, ::JSValueConst val) -> ::JSValue {
-    auto x = double {};
-    if (!::JS_IsNumber(val)) {
-        return JS_ThrowTypeError(js, "Rectangle x must be number");
-    }
-    ::JS_ToFloat64(js, &x, val);
-    auto rec = pointer_from_value(js, this_val);
-    rec->x = float(x);
+static auto set_x(JSContext *js, JSValueConst this_val, JSValueConst val) -> JSValue {
+    auto x = try_into<float>(js::Value::borrowed(js, val));
+    if (!x) return jsthrow(x.error());
+    auto rec = js::try_into<Rectangle *>(js::Value::borrowed(js, this_val));
+    if (!rec) return jsthrow(rec.error());
+    (*rec)->x = *x;
 
-    return ::JS_UNDEFINED;
+    return JS_UNDEFINED;
 }
 
-static auto set_y(::JSContext *js, ::JSValueConst this_val, ::JSValueConst val) -> ::JSValue {
-    auto y = double {};
-    if (!::JS_IsNumber(val)) {
-        return JS_ThrowTypeError(js, "Rectangle y must be number");
-    }
-    ::JS_ToFloat64(js, &y, val);
-    auto rec = pointer_from_value(js, this_val);
-    rec->y = float(y);
+static auto set_y(JSContext *js, JSValueConst this_val, JSValueConst val) -> JSValue {
+    auto y = try_into<float>(js::Value::borrowed(js, val));
+    if (!y) return jsthrow(y.error());
+    auto rec = js::try_into<Rectangle *>(js::Value::borrowed(js, this_val));
+    if (!rec) return jsthrow(rec.error());
+    (*rec)->y = *y;
 
-    return ::JS_UNDEFINED;
+    return JS_UNDEFINED;
 }
 
-static auto set_width(::JSContext *js, ::JSValueConst this_val, ::JSValueConst val) -> ::JSValue {
-    auto width = double {};
-    if (!::JS_IsNumber(val)) {
-        return JS_ThrowTypeError(js, "Rectangle width must be number");
-    }
-    ::JS_ToFloat64(js, &width, val);
-    auto rec = pointer_from_value(js, this_val);
-    rec->width = float(width);
+static auto set_width(JSContext *js, JSValueConst this_val, JSValueConst val) -> JSValue {
+    auto width = try_into<float>(js::Value::borrowed(js, val));
+    if (!width) return jsthrow(width.error());
+    auto rec = js::try_into<Rectangle *>(js::Value::borrowed(js, this_val));
+    if (!rec) return jsthrow(rec.error());
+    (*rec)->width = *width;
 
-    return ::JS_UNDEFINED;
+    return JS_UNDEFINED;
 }
 
-static auto set_height(::JSContext *js, ::JSValueConst this_val, ::JSValueConst val) -> ::JSValue {
-    auto height = double {};
-    if (!::JS_IsNumber(val)) {
-        return JS_ThrowTypeError(js, "Rectangle height must be number");
-    }
-    ::JS_ToFloat64(js, &height, val);
-    auto rec = pointer_from_value(js, this_val);
-    rec->height = float(height);
+static auto set_height(JSContext *js, JSValueConst this_val, JSValueConst val) -> JSValue {
+    auto height = try_into<float>(js::Value::borrowed(js, val));
+    if (!height) return jsthrow(height.error());
+    auto rec = js::try_into<Rectangle *>(js::Value::borrowed(js, this_val));
+    if (!rec) return jsthrow(rec.error());
+    (*rec)->height = *height;
 
-    return ::JS_UNDEFINED;
+    return JS_UNDEFINED;
 }
 
-static auto object_to_string(::JSContext *js, JSValueConst this_val, int, JSValueConst *) -> ::JSValue {
-    auto rec = pointer_from_value(js, this_val);
+static auto object_to_string(JSContext *js, JSValueConst this_val, int, JSValueConst *) -> JSValue {
+    auto rec = js::try_into<Rectangle>(js::Value::borrowed(js, this_val));
+    if (!rec) return jsthrow(rec.error());
     const auto str = to_string(*rec);
 
     return JS_NewString(js, str.c_str());
 }
 
 static const auto PROTO_FUNCS = std::array {
-    ::JSCFunctionListEntry JS_CGETSET_DEF("x", get_x, set_x),
-    ::JSCFunctionListEntry JS_CGETSET_DEF("y", get_y, set_y),
-    ::JSCFunctionListEntry JS_CGETSET_DEF("width", get_width, set_width),
-    ::JSCFunctionListEntry JS_CGETSET_DEF("height", get_height, set_height),
-    ::JSCFunctionListEntry JS_CFUNC_DEF("toString", 0, object_to_string),
+    JSCFunctionListEntry JS_CGETSET_DEF("x", get_x, set_x),
+    JSCFunctionListEntry JS_CGETSET_DEF("y", get_y, set_y),
+    JSCFunctionListEntry JS_CGETSET_DEF("width", get_width, set_width),
+    JSCFunctionListEntry JS_CGETSET_DEF("height", get_height, set_height),
+    JSCFunctionListEntry JS_CFUNC_DEF("toString", 0, object_to_string),
 };
 
 static const auto STATIC_FUNCS = std::array {
-    // static const auto STATIC_FUNCS = std::vector<::JSCFunctionListEntry>{
-    ::JSCFunctionListEntry JS_CFUNC_DEF("zero", 0, zero),
-    ::JSCFunctionListEntry JS_CFUNC_DEF("fromVectors", 0, from_vectors),
+    // static const auto STATIC_FUNCS = std::vector<JSCFunctionListEntry>{
+    JSCFunctionListEntry JS_CFUNC_DEF("zero", 0, zero),
+    JSCFunctionListEntry JS_CFUNC_DEF("fromVectors", 0, from_vectors),
 };
 
-static const auto RECTANGLE_CLASS = ::JSClassDef {
+extern const JSClassDef RECTANGLE = {
     .class_name = "Vector2",
     .finalizer = finalizer,
     .gc_mark = nullptr,
@@ -228,24 +195,25 @@ static const auto RECTANGLE_CLASS = ::JSClassDef {
     .exotic = nullptr,
 };
 
-auto module(::JSContext *js) -> ::JSModuleDef * {
-    auto m = ::JS_NewCModule(js, "muen:Rectangle", [](auto js, auto m) -> int {
-        ::JS_NewClass(::JS_GetRuntime(js), class_id(js), &RECTANGLE_CLASS);
+auto module(JSContext *js) -> JSModuleDef * {
+    auto m = JS_NewCModule(js, "muen:Rectangle", [](auto js, auto m) -> int {
+        const auto id = js::class_id<&RECTANGLE>(js);
+        JS_NewClass(JS_GetRuntime(js), id, &RECTANGLE);
 
-        ::JSValue proto = ::JS_NewObject(js);
-        ::JS_SetPropertyFunctionList(js, proto, PROTO_FUNCS.data(), int {PROTO_FUNCS.size()});
-        ::JS_SetClassProto(js, class_id(js), proto);
+        JSValue proto = JS_NewObject(js);
+        JS_SetPropertyFunctionList(js, proto, PROTO_FUNCS.data(), int {PROTO_FUNCS.size()});
+        JS_SetClassProto(js, id, proto);
 
-        ::JSValue ctor = ::JS_NewCFunction2(js, constructor, "Rectangle", 1, ::JS_CFUNC_constructor, 0);
-        ::JS_SetPropertyFunctionList(js, ctor, STATIC_FUNCS.data(), int {STATIC_FUNCS.size()});
-        ::JS_SetConstructor(js, ctor, proto);
+        JSValue ctor = JS_NewCFunction2(js, constructor, "Rectangle", 1, JS_CFUNC_constructor, 0);
+        JS_SetPropertyFunctionList(js, ctor, STATIC_FUNCS.data(), int {STATIC_FUNCS.size()});
+        JS_SetConstructor(js, ctor, proto);
 
-        ::JS_SetModuleExport(js, m, "default", ctor);
+        JS_SetModuleExport(js, m, "default", ctor);
 
         return 0;
     });
 
-    ::JS_AddModuleExport(js, m, "default");
+    JS_AddModuleExport(js, m, "default");
 
     return m;
 }
@@ -255,12 +223,3 @@ auto to_string(Rectangle rec) -> std::string {
 }
 
 } // namespace muen::plugins::math::rectangle
-
-namespace js {
-
-template<>
-auto try_as<::Rectangle>(::JSContext *js, ::JSValueConst value) -> std::expected<::Rectangle, ::JSValue> {
-    return muen::plugins::math::rectangle::from_value(js, value);
-}
-
-} // namespace js

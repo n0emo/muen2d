@@ -9,10 +9,9 @@
 
 #include <defer.hpp>
 #include <plugins/math.hpp>
-#include <jsutil.hpp>
+#include <quickjs.hpp>
 
-namespace muen::plugins::graphics {
-
+namespace muen::js {
 struct Text {
     std::variant<std::string, int, std::vector<int>> text = {};
     float font_size = {};
@@ -24,44 +23,53 @@ struct Text {
     std::optional<Font> font = std::nullopt;
 };
 
-static auto text_from_value(JSContext *js, JSValueConst value) -> std::expected<Text, JSValue> {
+template<>
+auto try_into<Text>(const Value& val) noexcept -> JSResult<Text> {
     auto text = Text {};
+    auto obj = Object::from_value(val);
+    if (!obj) return Unexpected(obj.error());
 
-    if (auto t = js::try_get_property<std::string>(js, value, "text")) {
-        text.text = *t;
-    } else if (auto c = js::try_get_property<int>(js, value, "codepoint")) {
+    if (auto t = obj->at<std::string>("text")) {
+        text.text = std::move(*t);
+    } else if (auto c = obj->at<int>("codepoint")) {
         text.text = *c;
-    } else if (auto cs = js::try_get_property<std::vector<int>>(js, value, "codepoints")) {
-        text.text = *cs;
+    } else if (auto cs = obj->at<std::vector<int>>("codepoints")) {
+        text.text = std::move(*cs);
     } else {
-        return Err(JS_NewTypeError(
-            js,
-            "Text object must either have `text` (string), `codepoint` (number) or `codepoints` (number[]) property"
-        ));
+        return Unexpected(
+            JSError::type_error(
+                val.ctx(),
+                "Text object must either have `text` (string), `codepoint` (number) or `codepoints` (number[]) property"
+            )
+        );
     }
 
-    if (auto v = js::try_get_property<float>(js, value, "fontSize")) text.font_size = *v;
-    else return Err(v.error());
-    if (auto v = js::try_get_property<Vector2>(js, value, "position")) text.position = *v;
-    else return Err(v.error());
-    if (auto v = js::try_get_property<Color>(js, value, "color")) text.color = *v;
-    else return Err(v.error());
-    if (auto v = js::try_get_property<std::optional<Vector2>>(js, value, "origin")) text.origin = *v;
-    else return Err(v.error());
-    if (auto v = js::try_get_property<std::optional<float>>(js, value, "rotation")) text.rotation = *v;
-    else return Err(v.error());
-    if (auto v = js::try_get_property<std::optional<float>>(js, value, "spacing")) text.spacing = *v;
-    else return Err(v.error());
-    if (auto v = js::try_get_property<std::optional<Font>>(js, value, "font")) text.font = *v;
-    else return Err(v.error());
+    if (auto v = obj->at<float>("fontSize")) text.font_size = *v;
+    else return Unexpected(v.error());
+    if (auto v = obj->at<Vector2>("position")) text.position = *v;
+    else return Unexpected(v.error());
+    if (auto v = obj->at<Color>("color")) text.color = *v;
+    else return Unexpected(v.error());
+    if (auto v = obj->at<std::optional<Vector2>>("origin")) text.origin = *v;
+    else return Unexpected(v.error());
+    if (auto v = obj->at<std::optional<float>>("rotation")) text.rotation = *v;
+    else return Unexpected(v.error());
+    if (auto v = obj->at<std::optional<float>>("spacing")) text.spacing = *v;
+    else return Unexpected(v.error());
+    if (auto v = obj->at<std::optional<Font>>("font")) text.font = *v;
+    else return Unexpected(v.error());
 
     return text;
 }
 
+} // namespace muen::js
+
+namespace muen::plugins::graphics {
+
 static auto clear(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {
     SPDLOG_TRACE("graphics.clear/{}", argc);
     const auto args = js::unpack_args<Color>(js, argc, argv);
-    if (!args) return JS_Throw(js, args.error());
+    if (!args) return jsthrow(args.error());
     const auto [color] = *args;
     SPDLOG_TRACE("ClearBackground({})", color);
     ClearBackground(color);
@@ -71,7 +79,7 @@ static auto clear(JSContext *js, JSValueConst this_val, int argc, JSValueConst *
 static auto circle_simple(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {
     SPDLOG_TRACE("graphics.circle/{}", argc);
     const auto args = js::unpack_args<int, int, float, Color>(js, argc, argv);
-    if (!args) return JS_Throw(js, args.error());
+    if (!args) return jsthrow(args.error());
     const auto [x, y, radius, color] = *args;
     SPDLOG_TRACE("DrawCircle({}, {}, {}, {})", x, y, radius, color);
     DrawCircle(x, y, radius, color);
@@ -81,7 +89,7 @@ static auto circle_simple(JSContext *js, JSValueConst this_val, int argc, JSValu
 static auto rectangle_simple(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {
     SPDLOG_TRACE("graphics.rectangle/{}", argc);
     const auto args = js::unpack_args<int, int, int, int, Color>(js, argc, argv);
-    if (!args) return JS_Throw(js, args.error());
+    if (!args) return jsthrow(args.error());
     const auto [x, y, width, height, color] = *args;
     SPDLOG_TRACE("DrawRectangle({}, {}, {}, {}, {})", x, y, width, height, color);
     DrawRectangle(x, y, width, height, color);
@@ -91,7 +99,7 @@ static auto rectangle_simple(JSContext *js, JSValueConst this_val, int argc, JSV
 static auto rectangle_v(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {
     SPDLOG_TRACE("graphics.rectangleV/{}", argc);
     const auto args = js::unpack_args<Vector2, Vector2, Color>(js, argc, argv);
-    if (!args) return JS_Throw(js, args.error());
+    if (!args) return jsthrow(args.error());
     const auto [position, size, color] = *args;
     SPDLOG_TRACE("DrawRectangleV({}, {}, {})", position, size, color);
     DrawRectangleV(position, size, color);
@@ -101,7 +109,7 @@ static auto rectangle_v(JSContext *js, JSValueConst this_val, int argc, JSValueC
 static auto rectangle_rec(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {
     SPDLOG_TRACE("graphics.rectangleRec/{}", argc);
     const auto args = js::unpack_args<Rectangle, Color>(js, argc, argv);
-    if (!args) return JS_Throw(js, args.error());
+    if (!args) return jsthrow(args.error());
     const auto [rec, color] = *args;
     SPDLOG_TRACE("DrawRectangleRec({}, {})", rec, color);
     DrawRectangleRec(rec, color);
@@ -111,7 +119,7 @@ static auto rectangle_rec(JSContext *js, JSValueConst this_val, int argc, JSValu
 static auto rectangle_pro(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {
     SPDLOG_TRACE("graphics.rectanglePro/{}", argc);
     const auto args = js::unpack_args<Rectangle, Vector2, float, Color>(js, argc, argv);
-    if (!args) return JS_Throw(js, args.error());
+    if (!args) return jsthrow(args.error());
     const auto [rec, origin, rotation, color] = *args;
     SPDLOG_TRACE("DrawRectanglePro({}, {}, {}, {})", rec, origin, rotation, color);
     DrawRectanglePro(rec, origin, rotation, color);
@@ -121,7 +129,7 @@ static auto rectangle_pro(JSContext *js, JSValueConst this_val, int argc, JSValu
 static auto begin_camera_mode(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {
     SPDLOG_TRACE("graphics.beginCameraMode/{}", argc);
     const auto args = js::unpack_args<Camera2D>(js, argc, argv);
-    if (!args) return JS_Throw(js, args.error());
+    if (!args) return jsthrow(args.error());
     const auto [camera] = *args;
     SPDLOG_TRACE("BeginMode2D({})", camera);
     BeginMode2D(camera);
@@ -138,7 +146,7 @@ static auto end_camera_mode(JSContext *js, JSValueConst this_val, int argc, JSVa
 static auto texture_simple(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {
     SPDLOG_TRACE("graphics.texture/{}", argc);
     const auto args = js::unpack_args<Texture, int, int, Color>(js, argc, argv);
-    if (!args) return JS_Throw(js, args.error());
+    if (!args) return jsthrow(args.error());
     const auto [texture, x, y, tint] = *args;
     SPDLOG_TRACE("DrawTexture({}, {}, {}, {})", texture, x, y, tint);
     DrawTexture(texture, x, y, tint);
@@ -148,7 +156,7 @@ static auto texture_simple(JSContext *js, JSValueConst this_val, int argc, JSVal
 static auto texture_v(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {
     SPDLOG_TRACE("graphics.textureV/{}", argc);
     const auto args = js::unpack_args<Texture, Vector2, Color>(js, argc, argv);
-    if (!args) return JS_Throw(js, args.error());
+    if (!args) return jsthrow(args.error());
     const auto [texture, position, tint] = *args;
     SPDLOG_TRACE("DrawTextureV({}, {}, {})", texture, position, tint);
     DrawTextureV(texture, position, tint);
@@ -158,7 +166,7 @@ static auto texture_v(JSContext *js, JSValueConst this_val, int argc, JSValueCon
 static auto texture_ex(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {
     SPDLOG_TRACE("graphics.textureEx/{}", argc);
     const auto args = js::unpack_args<Texture, Vector2, float, float, Color>(js, argc, argv);
-    if (!args) return JS_Throw(js, args.error());
+    if (!args) return jsthrow(args.error());
     const auto [texture, position, rotation, scale, tint] = *args;
     SPDLOG_TRACE("DrawTextureEx({}, {}, {}, {}, {})", texture, position, rotation, scale, tint);
     DrawTextureEx(texture, position, rotation, scale, tint);
@@ -168,7 +176,7 @@ static auto texture_ex(JSContext *js, JSValueConst this_val, int argc, JSValueCo
 static auto texture_rec(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {
     SPDLOG_TRACE("graphics.textureRec/{}", argc);
     const auto args = js::unpack_args<Texture, Rectangle, Vector2, Color>(js, argc, argv);
-    if (!args) return JS_Throw(js, args.error());
+    if (!args) return jsthrow(args.error());
     const auto [texture, source, position, tint] = *args;
     SPDLOG_TRACE("DrawTextureRec({}, {}, {}, {})", texture, source, position, tint);
     DrawTextureRec(texture, source, position, tint);
@@ -178,7 +186,7 @@ static auto texture_rec(JSContext *js, JSValueConst this_val, int argc, JSValueC
 static auto texture_pro(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {
     SPDLOG_TRACE("graphics.texturePro/{}", argc);
     const auto args = js::unpack_args<Texture, Rectangle, Rectangle, Vector2, float, Color>(js, argc, argv);
-    if (!args) return JS_Throw(js, args.error());
+    if (!args) return jsthrow(args.error());
     const auto [texture, source, dest, origin, rotation, tint] = *args;
     SPDLOG_TRACE("DrawTexturePro({}, {}, {}, {}, {}, {})", texture, source, dest, origin, rotation, tint);
     DrawTexturePro(texture, source, dest, origin, rotation, tint);
@@ -188,7 +196,7 @@ static auto texture_pro(JSContext *js, JSValueConst this_val, int argc, JSValueC
 static auto texture_npatch(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {
     SPDLOG_TRACE("graphics.texturePro/{}", argc);
     const auto args = js::unpack_args<Texture, NPatchInfo, Rectangle, Vector2, float, Color>(js, argc, argv);
-    if (!args) return JS_Throw(js, args.error());
+    if (!args) return jsthrow(args.error());
     const auto [texture, npatch, dest, origin, rotation, tint] = *args;
     SPDLOG_TRACE("DrawTextureNPatch({}, {}, {}, {}, {}, {});", texture, npatch, dest, origin, rotation, tint);
     DrawTextureNPatch(texture, npatch, dest, origin, rotation, tint);
@@ -198,7 +206,7 @@ static auto texture_npatch(JSContext *js, JSValueConst this_val, int argc, JSVal
 static auto text_simple(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {
     SPDLOG_TRACE("graphics.text/{}", argc);
     const auto args = js::unpack_args<std::string, int, int, int, Color>(js, argc, argv);
-    if (!args) return JS_Throw(js, args.error());
+    if (!args) return jsthrow(args.error());
     const auto [text, x, y, font_size, color] = *args;
     SPDLOG_TRACE("DrawText('{}', {}, {}, {}, {})", text, x, y, font_size, color);
     DrawText(text.c_str(), x, y, font_size, color);
@@ -208,30 +216,27 @@ static auto text_simple(JSContext *js, JSValueConst this_val, int argc, JSValueC
 
 static auto text_pro(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {
     SPDLOG_TRACE("graphics.textPro/{}", argc);
-    if (argc != 1) {
-        return JS_ThrowTypeError(js, "graphics.textPro expects 1 argument, but %d were provided", argc);
-    }
+    auto args = js::unpack_args<js::Text>(js, argc, argv);
+    if (!args) return jsthrow(args.error());
+    const auto [text] = *args;
 
-    auto text = text_from_value(js, argv[0]);
-    if (!text) return JS_Throw(js, text.error());
+    const auto font_size = text.font_size;
+    const auto position = text.position;
+    const auto color = text.color;
+    const auto origin = text.origin.value_or(Vector2 {});
+    const auto rotation = text.rotation.value_or(0);
+    const auto spacing = text.spacing.value_or(0);
+    const auto font = text.font.value_or(GetFontDefault());
 
-    const auto font_size = text->font_size;
-    const auto position = text->position;
-    const auto color = text->color;
-    const auto origin = text->origin.value_or(Vector2 {});
-    const auto rotation = text->rotation.value_or(0);
-    const auto spacing = text->spacing.value_or(0);
-    const auto font = text->font.value_or(GetFontDefault());
-
-    if (const auto str = std::get_if<std::string>(&text->text)) {
+    if (const auto str = std::get_if<std::string>(&text.text)) {
         SPDLOG_TRACE("DrawTextPro({}, '{}', {}, {}, {})", font, *str, position, font_size, color);
         DrawTextPro(font, str->c_str(), position, origin, rotation, font_size, spacing, color);
 
-    } else if (const auto codepoint = std::get_if<int>(&text->text)) {
+    } else if (const auto codepoint = std::get_if<int>(&text.text)) {
         SPDLOG_TRACE("DrawTextCodepoint(font, {}, {}, {}, {})", font, *codepoint, position, font_size, color);
         DrawTextCodepoint(font, *codepoint, position, font_size, color);
 
-    } else if (const auto codepoints = std::get_if<std::vector<int>>(&text->text)) {
+    } else if (const auto codepoints = std::get_if<std::vector<int>>(&text.text)) {
         SPDLOG_TRACE(
             "DrawTextCodepoints({}, {}, {}, {}, {}, {})",
             font,
@@ -250,7 +255,7 @@ static auto text_pro(JSContext *js, JSValueConst this_val, int argc, JSValueCons
 static auto begin_texture_mode(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {
     SPDLOG_TRACE("graphics.beginTextureMode/{}", argc);
     const auto args = js::unpack_args<RenderTexture>(js, argc, argv);
-    if (!args) return JS_Throw(js, args.error());
+    if (!args) return jsthrow(args.error());
     const auto [texture] = *args;
     SPDLOG_TRACE("BeginTextureMode({})", texture);
     BeginTextureMode(texture);
@@ -267,7 +272,7 @@ static auto end_texture_mode(JSContext *js, JSValueConst this_val, int argc, JSV
 static auto with_texture(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {
     SPDLOG_TRACE("graphics.withTexture/{}", argc);
     const auto args = js::unpack_args<RenderTexture, JSValue>(js, argc, argv);
-    if (!args) return JS_Throw(js, args.error());
+    if (!args) return jsthrow(args.error());
     const auto [texture, function] = *args;
 
     SPDLOG_TRACE("BeginTextureMode({})", texture);
