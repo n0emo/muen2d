@@ -23,6 +23,14 @@ export class Texture {
     constructor(path: string);
 
     /**
+     * Load texture from file into GPU memory (VRAM) and give it a cache name
+     * @param options Texture loading options
+     */
+    constructor(options: { name: string });
+
+    constructor(options: { path: string; name?: string });
+
+    /**
      * Check if a texture is valid (loaded in GPU)
      */
     get valid(): boolean;

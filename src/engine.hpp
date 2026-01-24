@@ -11,6 +11,8 @@
 #include <engine/plugin.hpp>
 #include <error.hpp>
 #include <file_store.hpp>
+#include <resource_store.hpp>
+#include <data.hpp>
 
 namespace muen {
 
@@ -30,9 +32,13 @@ class Engine {
     };
 
   private:
+    not_null<std::unique_ptr<IFileStore>> _file_store;
+    ResourceStore<TextureData> _texture_store {};
+    ResourceStore<FontData> _font_store {};
+
     not_null<std::unique_ptr<JSRuntime, JSRuntime_deleter>> _js_runtime;
     not_null<std::unique_ptr<JSContext, JSContext_deleter>> _js_context;
-    not_null<std::unique_ptr<IFileStore>> _store;
+
     std::unordered_map<std::filesystem::path, std::string> _js_modules {};
     std::unordered_map<std::filesystem::path, JSModuleDef *> _c_modules {};
     std::vector<std::function<auto()->Result<>>> _load_callbacks {};
@@ -57,7 +63,13 @@ class Engine {
     auto js_context() const noexcept -> not_null<JSContext *>;
 
     [[nodiscard]]
-    auto store() const noexcept -> IFileStore&;
+    auto file_store() noexcept -> IFileStore&;
+
+    [[nodiscard]]
+    auto texture_store() noexcept -> ResourceStore<TextureData>&;
+
+    [[nodiscard]]
+    auto font_store() noexcept -> ResourceStore<FontData>&;
 
     /// Register plugin to engine
     auto register_plugin(const plugins::EnginePlugin& desc) noexcept -> void;

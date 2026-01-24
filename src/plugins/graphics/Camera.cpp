@@ -8,22 +8,15 @@
 #include <raylib.h>
 
 #include <defer.hpp>
-#include <plugins/math.hpp>
+#include <engine.hpp>
 #include <error.hpp>
+#include <plugins/math.hpp>
 
 namespace muen::js {
 
 template<>
-auto try_into<Camera2D *>(const Value& val) noexcept -> JSResult<Camera2D *> {
-    const auto id = class_id<&plugins::graphics::camera::CLASS>(val.ctx());
-    auto ptr = static_cast<Camera2D *>(JS_GetOpaque(val.cget(), id));
-    if (ptr == nullptr) return Unexpected(JSError::type_error(val.ctx(), "Not an instance of Camera2D"));
-    return ptr;
-}
-
-template<>
 auto try_into<Camera2D>(const Value& val) noexcept -> JSResult<Camera2D> {
-    if (auto r = try_into<Camera2D *>(val)) return **r;
+    if (auto r = plugins::graphics::camera::CameraClassData::from_value(val)) return (*r)->camera;
 
     auto cam = Camera2D {};
     auto obj = Object::from_value(val);
@@ -44,6 +37,12 @@ auto try_into<Camera2D>(const Value& val) noexcept -> JSResult<Camera2D> {
 } // namespace muen::js
 
 namespace muen::plugins::graphics::camera {
+
+auto CameraClassData::from_value(const Value& val) -> JSResult<CameraClassData *> {
+    const auto data = static_cast<CameraClassData *>(JS_GetOpaque(val.cget(), class_id<&CAMERA>(val.ctx())));
+    if (data == nullptr) return Unexpected(JSError::type_error(val.ctx(), "Expected Texture object"));
+    return data;
+}
 
 using namespace gsl;
 
@@ -72,7 +71,7 @@ static const auto STATIC_FUNCS = std::array {
     JSCFunctionListEntry JS_CFUNC_DEF("default", 0, default_camera),
 };
 
-extern const JSClassDef CLASS = {
+extern const JSClassDef CAMERA = {
     .class_name = "Camera",
     .finalizer = finalizer,
     .gc_mark = nullptr,
@@ -82,11 +81,11 @@ extern const JSClassDef CLASS = {
 
 auto module(JSContext *js) -> JSModuleDef * {
     auto m = JS_NewCModule(js, "muen:Camera", [](auto js, auto m) -> int {
-        JS_NewClass(JS_GetRuntime(js), js::class_id<&CLASS>(js), &CLASS);
+        JS_NewClass(JS_GetRuntime(js), js::class_id<&CAMERA>(js), &CAMERA);
 
         JSValue proto = JS_NewObject(js);
         JS_SetPropertyFunctionList(js, proto, PROTO_FUNCS.data(), int {PROTO_FUNCS.size()});
-        JS_SetClassProto(js, js::class_id<&CLASS>(js), proto);
+        JS_SetClassProto(js, js::class_id<&CAMERA>(js), proto);
 
         JSValue ctor = ::JS_NewCFunction2(js, constructor, "Camera", 4, ::JS_CFUNC_constructor, 0);
         JS_SetPropertyFunctionList(js, ctor, STATIC_FUNCS.data(), int {STATIC_FUNCS.size()});
@@ -102,20 +101,8 @@ auto module(JSContext *js) -> JSModuleDef * {
     return m;
 }
 
-auto to_string(Camera2D cam) -> std::string {
-    return fmt::format(
-        "Camera {{ offset: {{{}, {}}}, target: {{{}, {}}}, rotation: {}, zoom: {} }}",
-        cam.offset.x,
-        cam.offset.y,
-        cam.target.x,
-        cam.target.y,
-        cam.rotation,
-        cam.zoom
-    );
-}
-
 auto pointer_from_value(JSContext *js, JSValueConst val) -> Camera2D * {
-    return static_cast<Camera2D *>(JS_GetOpaque(val, js::class_id<&CLASS>(js)));
+    return static_cast<Camera2D *>(JS_GetOpaque(val, js::class_id<&CAMERA>(js)));
 }
 
 static auto constructor(JSContext *js, JSValue new_target, int argc, JSValue *argv) -> JSValue {
@@ -130,7 +117,7 @@ static auto constructor(JSContext *js, JSValue new_target, int argc, JSValue *ar
     }
     defer(JS_FreeValue(js, proto));
 
-    const auto obj = JS_NewObjectProtoClass(js, proto, js::class_id<&CLASS>(js));
+    const auto obj = JS_NewObjectProtoClass(js, proto, js::class_id<&CAMERA>(js));
     if (JS_HasException(js)) {
         JS_FreeValue(js, obj);
         return JS_GetException(js);
@@ -147,12 +134,12 @@ static auto constructor(JSContext *js, JSValue new_target, int argc, JSValue *ar
 }
 
 static auto finalizer(JSRuntime *rt, JSValueConst val) -> void {
-    auto ptr = owner<Camera2D *>(JS_GetOpaque(val, js::class_id<&CLASS>(rt)));
+    auto ptr = owner<CameraClassData *>(JS_GetOpaque(val, js::class_id<&CAMERA>(rt)));
     delete ptr;
 }
 
 static auto default_camera(JSContext *js, JSValueConst, int, JSValue *) -> JSValue {
-    const auto obj = JS_NewObjectClass(js, js::class_id<&CLASS>(js));
+    const auto obj = JS_NewObjectClass(js, js::class_id<&CAMERA>(js));
     const auto cam = owner<Vector2 *>(new Camera2D {
         .offset = {0.0f, 0.0f},
         .target = {0.0f, 0.0f},
@@ -223,7 +210,7 @@ static auto set_zoom(JSContext *js, JSValueConst this_val, ::JSValueConst val) -
 
 static auto to_string(JSContext *js, JSValue this_val, int, JSValue *) -> ::JSValue {
     const auto cam = pointer_from_value(js, this_val);
-    const auto str = to_string(*cam);
+    const auto str = fmt::format("{}", *cam);
     return JS_NewString(js, str.c_str());
 }
 

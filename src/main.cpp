@@ -49,7 +49,7 @@ auto main(int argc, char **argv) noexcept -> int try {
         return 1;
     }
 
-    auto game_result = Game::create(engine->js_context(), &engine->store());
+    auto game_result = Game::create(engine->js_context(), &engine->file_store());
     if (!game_result) {
         fmt::println("Error creating game: {}", game_result.error()->msg());
         if (auto loc = game_result.error()->loc_str()) fmt::println("Originated from:\n    {}", *loc);

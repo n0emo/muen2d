@@ -13,7 +13,7 @@ export const config = {
 };
 
 export function load() {
-    font = new Font("Blouse.ttf");
+    font = new Font({ path: "Blouse.ttf", name: "Blouse" });
 }
 
 export function draw() {
@@ -27,6 +27,6 @@ export function draw() {
         rotation: 45,
         origin: new Vector2(20, 20),
         spacing: 5,
-        font: font,
+        font: new Font({ name: "Blouse" }),
     });
 }

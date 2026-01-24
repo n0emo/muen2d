@@ -2,6 +2,7 @@
 
 #include <array>
 #include <expected>
+#include <gsl/gsl>
 
 #include <fmt/format.h>
 #include <raylib.h>
@@ -9,37 +10,88 @@
 
 #include <defer.hpp>
 #include <engine.hpp>
+#include <error.hpp>
 #include <plugins/math.hpp>
+
+namespace muen::plugins::graphics::texture {} // namespace muen::plugins::graphics::texture
 
 namespace muen::js {
 
-template<>
-auto try_into<Texture *>(const Value& val) noexcept -> JSResult<Texture *> {
-    using muen::plugins::graphics::texture::TEXTURE;
+using muen::plugins::graphics::texture::TEXTURE;
+using muen::plugins::graphics::texture::TextureClassData;
+using plugins::graphics::texture::TextureOptions;
 
-    const auto ptr = static_cast<Texture *>(JS_GetOpaque(val.cget(), class_id<&TEXTURE>(val.ctx())));
-    if (ptr == nullptr) return Unexpected(JSError::type_error(val.ctx(), "Expected Texture object"));
-    return ptr;
+template<>
+auto try_into<const rl::Texture *>(const Value& val) noexcept -> JSResult<const rl::Texture *> {
+    const auto data = static_cast<TextureClassData *>(JS_GetOpaque(val.cget(), class_id<&TEXTURE>(val.ctx())));
+    if (data == nullptr) return Unexpected(JSError::type_error(val.ctx(), "Expected Texture object"));
+
+    auto& e = Engine::get(val.ctx());
+    auto& tex = e.texture_store().borrow(data->handle);
+    return &tex;
 }
 
 template<>
-auto try_into<Texture>(const Value& val) noexcept -> JSResult<Texture> {
-    auto ptr = try_into<Texture *>(val);
-    if (ptr) return **ptr;
-    else return Unexpected(ptr.error());
+auto try_into<TextureOptions>(const Value& val) noexcept -> JSResult<TextureOptions> try {
+    auto o = TextureOptions {};
+    auto obj = Object::from_value(val);
+    if (!obj) return Unexpected(obj.error());
+
+    if (auto v = obj->at<std::optional<std::string>>("path"); v) o.path = *v;
+    else return Unexpected(v.error());
+    if (auto v = obj->at<std::optional<std::string>>("name"); v) o.name = *v;
+    else return Unexpected(v.error());
+
+    return o;
+} catch (std::exception& e) {
+    return Unexpected(JSError::plain_error(val.ctx(), fmt::format("Unexpected C++ exception: {}", e.what())));
 }
 
 } // namespace muen::js
 
 namespace muen::plugins::graphics::texture {
 
-static auto constructor(JSContext *js, JSValue new_target, int argc, JSValue *argv) -> JSValue;
-static auto finalizer(JSRuntime *rt, JSValue val) -> void;
+using namespace gsl;
+
+inline auto read_texture_options_from_args(not_null<JSContext *> ctx, int argc, JSValueConst *argv) noexcept
+    -> js::JSResult<TextureLoadMode> try {
+    if (auto args_string = js::unpack_args<std::string>(ctx, argc, argv)) {
+        auto [path] = std::move(*args_string);
+        return TextureLoadByParams {
+            .path = path,
+            .name = path,
+        };
+    } else if (auto args_options = js::unpack_args<TextureOptions>(ctx, argc, argv)) {
+        auto [opts] = std::move(*args_options);
+        if (opts.name && !opts.path) {
+            return TextureLoadByName {
+                .name = std::move(*opts.name),
+            };
+        } else if (opts.path) {
+            if (!opts.name) opts.name = opts.path->string();
+            return TextureLoadByParams {
+                .path = std::move(*opts.path),
+                .name = std::move(*opts.name),
+            };
+        } else {
+            return Unexpected(js::JSError::type_error(ctx, "Either name or path must be present in options"));
+        }
+    } else {
+        return Unexpected(js::JSError::type_error(ctx, "No matching overload"));
+    }
+} catch (std::exception& e) {
+    return Unexpected(JSError::plain_error(ctx, fmt::format("Unexpected C++ exception: {}", e.what())));
+}
+
+static auto constructor(JSContext *js, JSValueConst new_target, int argc, JSValueConst *argv) -> JSValue;
+static auto finalizer(JSRuntime *rt, JSValueConst val) -> void;
+static auto unload(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue;
 static auto get_source(JSContext *js, JSValueConst this_val) -> JSValue;
 static auto to_string(JSContext *js, JSValueConst this_val, int, JSValueConst *) -> JSValue;
 
 static const auto PROTO_FUNCS = std::array {
     JSCFunctionListEntry JS_CGETSET_DEF("source", get_source, nullptr),
+    JSCFunctionListEntry JS_CFUNC_DEF("unload", 0, unload),
     JSCFunctionListEntry JS_CFUNC_DEF("toString", 0, to_string),
 };
 
@@ -72,73 +124,71 @@ auto module(JSContext *js) -> JSModuleDef * {
     return m;
 }
 
-auto to_string(Texture tex) -> std::string {
-    return fmt::format(
-        "Texture {{ id: {}, width: {}, height: {}, mipmaps: {}, format: {} }}",
-        tex.id,
-        tex.width,
-        tex.height,
-        tex.mipmaps,
-        tex.format
-    );
-}
-
 static auto constructor(JSContext *js, JSValue new_target, int argc, JSValue *argv) -> JSValue {
     SPDLOG_TRACE("Texture.constructor/{}", argc);
-    const auto args = js::unpack_args<std::string>(js, argc, argv);
-    if (!args) return jsthrow(args.error());
-    const auto [filename] = *args;
-    const auto path = std::filesystem::path(filename);
-
+    auto opts = read_texture_options_from_args(js, argc, argv);
+    if (!opts) return jsthrow(opts.error());
     auto& e = Engine::get(js);
-    auto data = e.store().read_bytes(path);
-    if (!data) {
-        return JS_ThrowInternalError(
-            js,
-            "%s",
-            std::format("Could not load texture `{}`: {}", filename, data.error()->msg()).c_str()
-        );
-    }
 
-    auto image = LoadImageFromMemory(
-        path.extension().string().c_str(),
-        // NOLINTNEXTLINE: Casting from char* to unsigned char* is explicitly allowed by the standard
-        reinterpret_cast<unsigned char *>(data->data()),
-        int(data->size())
+    const auto handle = std::visit(
+        [&](auto&& arg) -> js::JSResult<int> {
+            using T = std::decay_t<decltype(arg)>;
+
+            if constexpr (std::is_same_v<T, TextureLoadByName>) {
+                return e.texture_store().load_by_name(arg.name);
+            } else if constexpr (std::is_same_v<T, TextureLoadByParams>) {
+                return e.texture_store().load(arg.name, [&]() -> TextureData {
+                    return TextureData::load(arg.path, e.file_store());
+                });
+            } else if constexpr (std::is_same_v<T, std::monostate>) {
+                return Unexpected(js::JSError::type_error(js, "Either name or path must be present in options"));
+            } else {
+                static_assert(false, "Non-exhaustive visit");
+            }
+        },
+        std::move(*opts)
     );
-
-    auto texture = LoadTextureFromImage(image);
-    UnloadImage(image);
 
     auto proto = JS_GetPropertyStr(js, new_target, "prototype");
     if (JS_IsException(proto)) {
-        UnloadTexture(texture);
         return proto;
     }
     defer(JS_FreeValue(js, proto));
 
     auto obj = JS_NewObjectProtoClass(js, proto, js::class_id<&TEXTURE>(js));
     if (JS_HasException(js)) {
-        UnloadTexture(texture);
         JS_FreeValue(js, obj);
         return JS_GetException(js);
     }
 
-    auto tex = owner<Texture *> {new (std::nothrow) Texture(texture)};
-    JS_SetOpaque(obj, tex);
+    auto data = owner<TextureClassData *> {new (std::nothrow) TextureClassData {.handle = *handle}};
+    JS_SetOpaque(obj, data);
     return obj;
 }
 
 static auto finalizer(JSRuntime *rt, JSValue val) -> void {
-    auto ptr = owner<Texture *> {static_cast<Texture *>(JS_GetOpaque(val, js::class_id<&TEXTURE>(rt)))};
-
-    if (!ptr) return;
-    UnloadTexture(*ptr);
+    SPDLOG_TRACE("Finalizing Texture");
+    auto ptr = owner<TextureClassData *>(JS_GetOpaque(val, js::class_id<&TEXTURE>(rt)));
+    if (!ptr) {
+        SPDLOG_WARN("Could not unload Texture because opaque is null");
+        return;
+    }
+    auto& e = Engine::get(rt);
+    e.texture_store().release(ptr->handle);
     delete ptr;
 }
 
+static auto unload(JSContext *js, JSValueConst this_val, int argc, JSValueConst *) -> JSValue {
+    SPDLOG_TRACE("Texture.unload/{}", argc);
+    auto ptr = owner<TextureClassData *>(JS_GetOpaque(this_val, js::class_id<&TEXTURE>(js)));
+    if (!ptr) return JS_ThrowTypeError(js, "Not an instance of Texture");
+    auto& e = Engine::get(js);
+    e.texture_store().release(ptr->handle);
+    return JS_UNDEFINED;
+}
+
 static auto get_source(JSContext *js, JSValueConst this_val) -> JSValue {
-    const auto tex = js::try_into<Texture *>(js::borrow(js, this_val));
+    const auto tex = js::try_into<const rl::Texture *>(js::borrow(js, this_val));
     if (!tex) return jsthrow(tex.error());
 
     const auto obj = JS_NewObjectClass(js, js::class_id<&math::rectangle::RECTANGLE>(js));
@@ -153,9 +203,9 @@ static auto get_source(JSContext *js, JSValueConst this_val) -> JSValue {
 }
 
 static auto to_string(JSContext *js, JSValueConst this_val, int, JSValueConst *) -> JSValue {
-    const auto tex = js::try_into<Texture *>(js::borrow(js, this_val));
+    const auto tex = js::try_into<const rl::Texture *>(js::borrow(js, this_val));
     if (!tex) return jsthrow(tex.error());
-    const auto str = to_string(**tex);
+    const auto str = fmt::format("{}", **tex);
     return JS_NewString(js, str.c_str());
 }
 

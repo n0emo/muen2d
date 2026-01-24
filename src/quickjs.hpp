@@ -292,7 +292,6 @@ inline auto try_into<bool>(const Value& v) noexcept -> JSResult<bool> {
     }
 
     return JS_ToBool(v.ctx(), v.cget());
-    return false;
 }
 
 template<>

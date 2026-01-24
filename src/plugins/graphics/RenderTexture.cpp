@@ -7,29 +7,23 @@
 
 namespace muen::js {
 
-using namespace muen;
-
 template<>
-auto try_into<RenderTexture *>(const Value& val) noexcept -> JSResult<RenderTexture *> {
-    using plugins::graphics::render_texture::RENDER_TEXTURE;
-
-    auto ptr = static_cast<RenderTexture *>(JS_GetOpaque(val.cget(), class_id<&RENDER_TEXTURE>(val.ctx())));
-    if (ptr == nullptr) JSError::type_error(val.ctx(), "Not a RenderTexture instance");
-    return ptr;
-}
-
-template<>
-auto try_into<RenderTexture>(const Value& val) noexcept -> JSResult<RenderTexture> {
-    auto ptr = try_into<RenderTexture *>(val);
-    if (ptr) return **ptr;
-    else return Unexpected(ptr.error());
+auto try_into<const rl::RenderTexture *>(const Value& val) noexcept -> JSResult<const rl::RenderTexture *> {
+    auto data = plugins::graphics::render_texture::RenderTextureClassData::from_value(val);
+    if (!data) return Unexpected(data.error());
+    return &(*data)->texture;
 }
 
 } // namespace muen::js
 
 namespace muen::plugins::graphics::render_texture {
 
-using namespace gsl;
+auto RenderTextureClassData::from_value(const Value& val) -> JSResult<RenderTextureClassData *> {
+    const auto data =
+        static_cast<RenderTextureClassData *>(JS_GetOpaque(val.cget(), class_id<&RENDER_TEXTURE>(val.ctx())));
+    if (data == nullptr) return Unexpected(JSError::type_error(val.ctx(), "Not an instance of RenderTexture"));
+    return data;
+}
 
 static auto constructor(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue;
 static auto finalizer(JSRuntime *rt, JSValueConst val) -> void;
@@ -76,10 +70,6 @@ auto module(JSContext *js) -> JSModuleDef * {
     return m;
 }
 
-auto to_string(RenderTexture texture) -> std::string {
-    return fmt::format("RenderTexture{{ texture: {}, depth: {}, id: {} }}", texture.texture, texture.depth, texture.id);
-}
-
 static auto constructor(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {
     SPDLOG_TRACE("RenderTexture.constructor/{}", argc);
     auto args = js::unpack_args<int, int>(js, argc, argv);
@@ -102,55 +92,57 @@ static auto constructor(JSContext *js, JSValueConst this_val, int argc, JSValueC
         return JS_ThrowInternalError(js, "Could not create RenderTexture");
     }
 
-    auto ptr = owner<RenderTexture *>(new RenderTexture {texture});
+    auto ptr = owner<RenderTextureClassData *>(new RenderTexture {texture});
     JS_SetOpaque(obj, ptr);
 
     return obj;
 }
 
 static auto finalizer(JSRuntime *rt, JSValueConst val) -> void {
-    auto texture = owner<RenderTexture *>(JS_GetOpaque(val, js::class_id<&RENDER_TEXTURE>(rt)));
+    auto texture = owner<RenderTextureClassData *>(JS_GetOpaque(val, js::class_id<&RENDER_TEXTURE>(rt)));
     if (texture == nullptr) {
         SPDLOG_WARN("Could not unload RenderTexture because opaque is null");
         return;
     }
-    UnloadRenderTexture(*texture);
     delete texture;
 }
 
 static auto get_width(JSContext *js, JSValueConst this_val) -> JSValue {
-    auto texture = js::try_into<RenderTexture *>(js::borrow(js, this_val));
-    if (!texture) return jsthrow(texture.error());
-    return JS_NewNumber(js, double((*texture)->texture.width));
+    auto data = RenderTextureClassData::from_value(borrow(js, this_val));
+    if (!data) return jsthrow(data.error());
+    return JS_NewNumber(js, double((*data)->texture.texture.width));
 }
 
 static auto set_width(JSContext *js, JSValueConst this_val, JSValueConst val) -> JSValue {
-    auto texture = js::try_into<RenderTexture *>(js::borrow(js, this_val));
-    if (!texture) return jsthrow(texture.error());
-    auto width = js::try_into<float>(js::borrow(js, val));
+    auto data = RenderTextureClassData::from_value(borrow(js, this_val));
+    if (!data) return jsthrow(data.error());
+    auto width = js::try_into<int>(js::borrow(js, val));
     if (!width) return jsthrow(width.error());
-    return JS_ThrowPlainError(js, "RenderTexture.width.set is not yet implemented");
+    auto height = (*data)->texture.texture.height;
+    (*data)->texture = rl::RenderTexture::load(*width, height);
+    return JS_UNDEFINED;
 }
 
 static auto get_height(JSContext *js, JSValueConst this_val) -> JSValue {
-    auto texture = js::try_into<RenderTexture *>(js::borrow(js, this_val));
-    if (!texture) return jsthrow(texture.error());
-    auto height = (*texture)->texture.height;
-    return JS_NewNumber(js, double(height));
+    auto data = RenderTextureClassData::from_value(borrow(js, this_val));
+    if (!data) return jsthrow(data.error());
+    return JS_NewNumber(js, double((*data)->texture.texture.height));
 }
 
 static auto set_height(JSContext *js, JSValueConst this_val, JSValueConst val) -> JSValue {
-    auto texture = js::try_into<RenderTexture *>(js::borrow(js, this_val));
-    if (!texture) return jsthrow(texture.error());
-    auto height = js::try_into<float>(js::borrow(js, val));
+    auto data = RenderTextureClassData::from_value(borrow(js, this_val));
+    if (!data) return jsthrow(data.error());
+    auto height = js::try_into<int>(js::borrow(js, val));
     if (!height) return jsthrow(height.error());
-    return JS_ThrowPlainError(js, "RenderTexture.height.set is not yet implemented");
+    auto width = (*data)->texture.texture.width;
+    (*data)->texture = rl::RenderTexture::load(width, *height);
+    return JS_UNDEFINED;
 }
 
 static auto to_string(JSContext *js, JSValueConst this_val, int, JSValueConst *) -> JSValue {
-    auto texture = js::try_into<RenderTexture *>(js::borrow(js, this_val));
-    if (!texture) return jsthrow(texture.error());
-    const auto str = to_string(**texture);
+    auto data = RenderTextureClassData::from_value(borrow(js, this_val));
+    if (!data) return jsthrow(data.error());
+    const auto str = fmt::format("{}", (*data)->texture);
     return JS_NewStringLen(js, str.data(), str.size());
 }
 

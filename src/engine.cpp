@@ -78,8 +78,16 @@ auto Engine::js_context() const noexcept -> not_null<JSContext *> {
     return _js_context.get().get();
 }
 
-auto Engine::store() const noexcept -> IFileStore& {
-    return *_store;
+auto Engine::file_store() noexcept -> IFileStore& {
+    return *_file_store;
+}
+
+auto Engine::texture_store() noexcept -> ResourceStore<TextureData>& {
+    return _texture_store;
+}
+
+auto Engine::font_store() noexcept -> ResourceStore<FontData>& {
+    return _font_store;
 }
 
 auto Engine::register_plugin(const plugins::EnginePlugin& desc) noexcept -> void try {
@@ -218,7 +226,7 @@ auto Engine::load_module(const std::filesystem::path& name) noexcept -> Result<o
                 path += ".js";
             }
             SPDLOG_TRACE("Loading module {}", path.string());
-            const auto contents = _store->read_string(path);
+            const auto contents = _file_store->read_string(path);
             if (!contents) return err(contents);
             SPDLOG_DEBUG("Module {} resolved as game module", name.string());
             code = *contents;
@@ -247,9 +255,9 @@ Engine::Engine(
     std::unique_ptr<JSContext, JSContext_deleter>&& context,
     std::unique_ptr<IFileStore>&& store
 ) noexcept :
+    _file_store {std::move(store)},
     _js_runtime {std::move(runtime)},
-    _js_context {std::move(context)},
-    _store {std::move(store)} {}
+    _js_context {std::move(context)} {}
 
 auto Game::create(not_null<JSContext *> js, not_null<IFileStore *> store) -> Result<Game> {
     SPDLOG_TRACE("Creating game");

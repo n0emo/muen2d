@@ -32,21 +32,21 @@ static auto sound_constructor(JSContext *js, JSValue new_target, int argc, JSVal
     auto args = js::unpack_args<std::string>(js, argc, argv);
     if (!args) return jsthrow(args.error());
     const auto [filename] = *args;
-    auto data = e.store().read_bytes(filename);
-    if (!data)
-        return JS_ThrowPlainError(js, "%s", fmt::format("Could not read sound data: {}", data.error()->msg()).c_str());
-
-    const auto result = audio::sound::load(filename, *data);
-    if (!result.has_value())
-        return JS_ThrowInternalError(js, "%s", fmt::format("Could not load sound: {}", result.error()->msg()).c_str());
-
-    audio::get().sounds.insert(*result);
+    auto sound_result = audio::sound::load(filename, e.file_store());
+    if (!sound_result)
+        return JS_ThrowInternalError(
+            js,
+            "%s",
+            fmt::format("Could not load sound: {}", sound_result.error()->msg()).c_str()
+        );
+    auto sound = owner<Sound *>(new Sound {std::move(*sound_result)});
+    audio::get().sounds.insert(sound);
 
     auto proto = JS_GetPropertyStr(js, new_target, "prototype");
     auto obj = JS_NewObjectProtoClass(js, proto, js::class_id<&SOUND>(js));
     JS_FreeValue(js, proto);
 
-    JS_SetOpaque(obj, *result);
+    JS_SetOpaque(obj, sound);
 
     return obj;
 }
@@ -54,8 +54,9 @@ static auto sound_constructor(JSContext *js, JSValue new_target, int argc, JSVal
 static auto sound_unload(JSContext *js, JSValueConst this_val, int, JSValueConst *) -> JSValue {
     auto s = js::try_into<audio::Sound *>(js::borrow(js, this_val));
     if (!s) return jsthrow(s.error());
-    audio::get().sounds.erase(*s);
-    sound::unload(owner<audio::Sound *> {*s});
+    auto ptr = owner<Sound *>(*s);
+    audio::get().sounds.erase(ptr);
+    delete ptr;
     return JS_UNDEFINED;
 }
 

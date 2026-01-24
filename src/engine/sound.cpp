@@ -4,27 +4,21 @@
 
 namespace muen::engine::audio::sound {
 
-auto load(const std::filesystem::path& name, std::span<char> data) noexcept -> Result<owner<Sound *>> {
-    const auto raylib_wave = LoadWaveFromMemory(
-        name.extension().string().c_str(),
-        // NOLINTNEXTLINE: Casting from char* to unsigned char* is explicitly allowed by the standard
-        reinterpret_cast<unsigned char *>(data.data()),
-        int(data.size())
-    );
+auto load(const std::filesystem::path& name, IFileStore& store) noexcept -> Result<Sound> {
+    auto data = store.read_bytes(name);
+    if (!data) return err(data);
+    auto buf = std::make_unique<unsigned char[]>(data->size());
+    std::ranges::copy(*data, buf.get());
+    auto span = std::span {buf.get(), data->size()};
+    auto wave = rl::Wave::load_from_memory(name.extension().string().c_str(), span);
+    auto raylib_sound = rl::Sound::load_from_wave(wave);
 
-    const auto raylib_sound = LoadSoundFromWave(raylib_wave);
-    UnloadWave(raylib_wave);
-
-    if (!::IsSoundValid(raylib_sound)) {
-        return err("Error loading sound");
-    }
-
-    const auto sound = Sound {.sound = raylib_sound};
+    auto sound = Sound {.sound = std::move(raylib_sound)};
     ::SetSoundVolume(sound.sound, sound.volume);
     ::SetSoundPan(sound.sound, sound.pan);
     ::SetSoundPitch(sound.sound, sound.pitch);
 
-    return {owner<Sound *> {new (std::nothrow) Sound {sound}}};
+    return sound;
 }
 
 auto unload(owner<Sound *> self) noexcept -> void {

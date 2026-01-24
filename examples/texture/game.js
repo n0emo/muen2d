@@ -13,8 +13,13 @@ const bgColor = Color.fromHex("#181818");
 let t = undefined;
 
 export function load() {
-    t = new Texture("cat.jpg");
-    console.log(t);
+    const t1 = new Texture("cat.jpg");
+    const t2 = new Texture({ path: "cat.jpg", name: "cat.jpg" });
+    const t3 = new Texture({ name: "cat.jpg" });
+    console.log(" First:", t1);
+    console.log("Second:", t2);
+    console.log(" Third:", t3);
+    t = t1;
 }
 
 export function draw() {

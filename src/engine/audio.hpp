@@ -1,13 +1,12 @@
 #pragma once
 
-#include <set>
-#include <span>
 #include <filesystem>
-
-#include <raylib.h>
 #include <gsl/gsl>
+#include <set>
 
 #include <error.hpp>
+#include <file_store.hpp>
+#include <raylib.hpp>
 
 namespace muen::engine::audio {
 
@@ -15,15 +14,14 @@ using namespace gsl;
 
 namespace music {
     struct Music {
-        ::Music music {};
-        not_null<unsigned char *> data;
+        rl::Music music {};
+        std::unique_ptr<unsigned char[]> data;
         float volume = 1.0f;
         float pitch = 1.0f;
         float pan = 0.5f;
     };
 
-    auto load(const std::filesystem::path& name, std::span<char> data) noexcept -> Result<owner<Music *>>;
-    auto unload(owner<Music *> self) noexcept -> void;
+    auto load(const std::filesystem::path& name, IFileStore& store) noexcept -> Result<Music>;
     auto update(Music& self) noexcept -> void;
     auto play(Music& self) noexcept -> void;
     auto stop(Music& self) noexcept -> void;
@@ -43,14 +41,13 @@ namespace music {
 
 namespace sound {
     struct Sound {
-        ::Sound sound {};
+        rl::Sound sound {};
         float volume = 1.0f;
         float pitch = 1.0f;
         float pan = 0.5f;
     };
 
-    auto load(const std::filesystem::path& name, std::span<char>) noexcept -> Result<owner<Sound *>>;
-    auto unload(owner<Sound *> self) noexcept -> void;
+    auto load(const std::filesystem::path& name, IFileStore& store) noexcept -> Result<Sound>;
     auto play(Sound& self) noexcept -> void;
     auto stop(Sound& self) noexcept -> void;
     auto pause(Sound& self) noexcept -> void;

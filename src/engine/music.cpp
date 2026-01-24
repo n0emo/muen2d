@@ -9,29 +9,21 @@ namespace muen::engine::audio::music {
 
 using namespace gsl;
 
-auto load(const std::filesystem::path& name, std::span<char> data) noexcept -> Result<owner<Music *>> {
-    auto buf = owner<unsigned char *>(new (std::nothrow) unsigned char[data.size()]);
-    std::ranges::copy(data, buf);
+auto load(const std::filesystem::path& name, IFileStore &store) noexcept -> Result<Music> {
+    auto data = store.read_bytes(name);
+    if (!data) return err(data);
+    auto buf = std::make_unique<unsigned char[]>(data->size());
+    std::ranges::copy(*data, buf.get());
+    auto span = std::span{buf.get(), data->size()};
+    auto raylib_music = rl::Music::load_from_memory(name.extension().string().c_str(), span);
 
-    const auto raylib_music = LoadMusicStreamFromMemory(name.extension().string().c_str(), buf, int(data.size()));
-
-    if (!IsMusicValid(raylib_music)) {
-        return err("Error loading music");
-    }
-    auto music = Music {.music = raylib_music, .data = buf};
+    auto music = Music {.music = std::move(raylib_music), .data = std::move(buf)};
 
     SetMusicVolume(music.music, music.volume);
     SetMusicPan(music.music, music.pan);
     SetMusicPitch(music.music, music.pitch);
-    auto ptr = owner<Music *>(new (std::nothrow) Music {music});
 
-    return {ptr};
-}
-
-auto unload(owner<Music *> self) noexcept -> void {
-    UnloadMusicStream(self->music);
-    delete self->data;
-    delete self;
+    return music;
 }
 
 auto update(Music& self) noexcept -> void {

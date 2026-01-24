@@ -1,10 +1,11 @@
 #pragma once
 
-#include <raylib.h>
+#include <gsl/gsl>
 
 #include <engine/audio.hpp>
 #include <engine/plugin.hpp>
 #include <quickjs.hpp>
+#include <raylib.hpp>
 
 namespace muen::js {
 
@@ -18,14 +19,20 @@ auto try_into<engine::audio::Sound *>(const Value& val) noexcept -> JSResult<eng
 
 namespace muen::plugins::audio {
 
+using namespace gsl;
+
 auto plugin(JSContext *js) -> EnginePlugin;
 
 namespace music_class {
+    using Music = engine::audio::Music;
+
     extern const JSClassDef MUSIC;
     auto module(JSContext *js) -> JSModuleDef *;
 } // namespace music_class
 
 namespace sound_class {
+    using Sound = engine::audio::Sound;
+
     extern const JSClassDef SOUND;
     auto module(JSContext *js) -> ::JSModuleDef *;
 } // namespace sound_class

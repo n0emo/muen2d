@@ -15,21 +15,8 @@
 namespace muen::js {
 
 template<>
-auto try_into<Color *>(const Value& val) noexcept -> JSResult<Color *> {
-    using namespace muen::plugins;
-
-    const auto id = class_id<&graphics::color::CLASS>(val.ctx());
-    if (JS_GetClassID(val.cget()) == id) {
-        const auto ptr = static_cast<::Color *>(JS_GetOpaque(val.cget(), id));
-        return ptr;
-    }
-
-    return Unexpected(JSError::type_error(val.ctx(), "Not an instance of Color"));
-}
-
-template<>
 auto try_into<Color>(const Value& val) noexcept -> JSResult<Color> {
-    if (auto r = try_into<Color *>(val)) return **r;
+    if (auto r = plugins::graphics::color::ColorClassData::from_value(val)) return (*r)->color;
 
     auto c = Color {};
     auto obj = Object::from_value(val);
@@ -50,7 +37,11 @@ auto try_into<Color>(const Value& val) noexcept -> JSResult<Color> {
 
 namespace muen::plugins::graphics::color {
 
-using namespace gsl;
+auto ColorClassData::from_value(const Value& val) -> JSResult<ColorClassData *> {
+    const auto data = static_cast<ColorClassData *>(JS_GetOpaque(val.cget(), class_id<&COLOR>(val.ctx())));
+    if (data == nullptr) return Unexpected(JSError::type_error(val.ctx(), "Not an instance of Color"));
+    return data;
+}
 
 static auto constructor(JSContext *js, JSValue new_target, int argc, JSValue *argv) -> JSValue;
 static auto finalizer(JSRuntime *rt, JSValue val) -> void;
@@ -77,7 +68,7 @@ static const auto STATIC_FUNCS = std::array {
     JSCFunctionListEntry JS_CFUNC_DEF("fromHex", 1, from_hex),
 };
 
-extern const JSClassDef CLASS = {
+extern const JSClassDef COLOR = {
     .class_name = "Color",
     .finalizer = finalizer,
     .gc_mark = nullptr,
@@ -87,11 +78,11 @@ extern const JSClassDef CLASS = {
 
 auto module(JSContext *js) -> JSModuleDef * {
     auto m = JS_NewCModule(js, "muen:Color", [](auto js, auto m) -> int {
-        JS_NewClass(JS_GetRuntime(js), js::class_id<&CLASS>(js), &CLASS);
+        JS_NewClass(JS_GetRuntime(js), js::class_id<&COLOR>(js), &COLOR);
 
         JSValue proto = JS_NewObject(js);
         JS_SetPropertyFunctionList(js, proto, PROTO_FUNCS.data(), int {PROTO_FUNCS.size()});
-        JS_SetClassProto(js, js::class_id<&CLASS>(js), proto);
+        JS_SetClassProto(js, js::class_id<&COLOR>(js), proto);
 
         JSValue ctor = JS_NewCFunction2(js, constructor, "Color", 4, JS_CFUNC_constructor, 0);
         JS_SetPropertyFunctionList(js, ctor, STATIC_FUNCS.data(), int {STATIC_FUNCS.size()});
@@ -105,10 +96,6 @@ auto module(JSContext *js) -> JSModuleDef * {
     JS_AddModuleExport(js, m, "default");
 
     return m;
-}
-
-auto to_string(Color col) -> std::string {
-    return fmt::format("Color {{ r: {}, g: {}, b: {}, a: {} }}", col.r, col.g, col.b, col.a);
 }
 
 static auto constructor(JSContext *js, JSValue new_target, int argc, JSValue *argv) -> JSValue {
@@ -138,13 +125,13 @@ static auto constructor(JSContext *js, JSValue new_target, int argc, JSValue *ar
     }
     defer(JS_FreeValue(js, proto));
 
-    auto obj = JS_NewObjectProtoClass(js, proto, js::class_id<&CLASS>(js));
+    auto obj = JS_NewObjectProtoClass(js, proto, js::class_id<&COLOR>(js));
     if (JS_HasException(js)) {
         JS_FreeValue(js, obj);
         return JS_GetException(js);
     }
 
-    auto col = owner<Color*>(new Color {
+    auto col = owner<Color *>(new Color {
         .r = static_cast<unsigned char>(r),
         .g = static_cast<unsigned char>(g),
         .b = static_cast<unsigned char>(b),
@@ -155,7 +142,7 @@ static auto constructor(JSContext *js, JSValue new_target, int argc, JSValue *ar
 }
 
 static auto finalizer(JSRuntime *rt, JSValue val) -> void {
-    auto ptr = owner<Color *>(JS_GetOpaque(val, js::class_id<&CLASS>(rt)));
+    auto ptr = owner<ColorClassData *>(JS_GetOpaque(val, js::class_id<&COLOR>(rt)));
     delete ptr;
 }
 
@@ -187,76 +174,76 @@ static auto from_hex(JSContext *js, JSValueConst, int argc, JSValueConst *argv) 
         a = parse_hex_pair(hex, 6);
     }
 
-    auto obj = JS_NewObjectClass(js, js::class_id<&CLASS>(js));
+    auto obj = JS_NewObjectClass(js, js::class_id<&COLOR>(js));
     auto col = owner<Color *>(new Color {.r = r, .g = g, .b = b, .a = a});
     JS_SetOpaque(obj, col);
     return obj;
 }
 
 static auto get_r(JSContext *js, JSValueConst this_val) -> JSValue {
-    auto col = js::try_into<Color *>(js::borrow(js, this_val));
-    if (!col) return jsthrow(col.error());
-    return JS_NewNumber(js, (*col)->r);
+    auto data = ColorClassData::from_value(borrow(js, this_val));
+    if (!data) return jsthrow(data.error());
+    return JS_NewNumber(js, (*data)->color.r);
 }
 
 static auto get_g(JSContext *js, JSValueConst this_val) -> JSValue {
-    auto col = js::try_into<Color *>(js::borrow(js, this_val));
-    if (!col) return jsthrow(col.error());
-    return JS_NewNumber(js, (*col)->g);
+    auto data = ColorClassData::from_value(borrow(js, this_val));
+    if (!data) return jsthrow(data.error());
+    return JS_NewNumber(js, (*data)->color.g);
 }
 
 static auto get_b(JSContext *js, JSValueConst this_val) -> JSValue {
-    auto col = js::try_into<Color *>(js::borrow(js, this_val));
-    if (!col) return jsthrow(col.error());
-    return JS_NewInt32(js, (*col)->b);
+    auto data = ColorClassData::from_value(borrow(js, this_val));
+    if (!data) return jsthrow(data.error());
+    return JS_NewNumber(js, (*data)->color.b);
 }
 
 static auto get_a(JSContext *js, JSValueConst this_val) -> JSValue {
-    auto col = js::try_into<Color *>(js::borrow(js, this_val));
-    if (!col) return jsthrow(col.error());
-    return JS_NewInt32(js, (*col)->a);
+    auto data = ColorClassData::from_value(borrow(js, this_val));
+    if (!data) return jsthrow(data.error());
+    return JS_NewNumber(js, (*data)->color.a);
 }
 
 static auto set_r(JSContext *js, JSValueConst this_val, JSValueConst val) -> JSValue {
+    auto data = ColorClassData::from_value(borrow(js, this_val));
+    if (!data) return jsthrow(data.error());
     const auto r = js::try_into<unsigned char>(js::Value::borrowed(js, val));
     if (!r) return jsthrow(r.error());
-    auto col = js::try_into<Color *>(js::borrow(js, this_val));
-    if (!col) return jsthrow(col.error());
-    (*col)->r = *r;
+    (*data)->color.r = *r;
     return JS_UNDEFINED;
 }
 
 static auto set_g(JSContext *js, JSValueConst this_val, JSValueConst val) -> JSValue {
+    auto data = ColorClassData::from_value(borrow(js, this_val));
+    if (!data) return jsthrow(data.error());
     const auto g = js::try_into<unsigned char>(js::Value::borrowed(js, val));
     if (!g) return jsthrow(g.error());
-    auto col = js::try_into<Color *>(js::borrow(js, this_val));
-    if (!col) return jsthrow(col.error());
-    (*col)->g = *g;
+    (*data)->color.g = *g;
     return JS_UNDEFINED;
 }
 
 static auto set_b(JSContext *js, JSValueConst this_val, JSValueConst val) -> JSValue {
+    auto data = ColorClassData::from_value(borrow(js, this_val));
+    if (!data) return jsthrow(data.error());
     const auto b = js::try_into<unsigned char>(js::Value::borrowed(js, val));
     if (!b) return jsthrow(b.error());
-    auto col = js::try_into<Color *>(js::borrow(js, this_val));
-    if (!col) return jsthrow(col.error());
-    (*col)->b = *b;
+    (*data)->color.b = *b;
     return JS_UNDEFINED;
 }
 
 static auto set_a(JSContext *js, JSValueConst this_val, JSValueConst val) -> JSValue {
+    auto data = ColorClassData::from_value(borrow(js, this_val));
+    if (!data) return jsthrow(data.error());
     const auto a = js::try_into<unsigned char>(js::borrow(js, val));
     if (!a) return jsthrow(a.error());
-    auto col = js::try_into<Color *>(js::borrow(js, this_val));
-    if (!col) return jsthrow(col.error());
-    (*col)->a = *a;
+    (*data)->color.a = *a;
     return JS_UNDEFINED;
 }
 
 static auto to_string(JSContext *js, JSValueConst this_val, int, JSValueConst *) -> JSValue {
     auto col = js::try_into<Color>(js::borrow(js, this_val));
     if (!col) return jsthrow(col.error());
-    const auto str = to_string(*col);
+    const auto str = fmt::format("{}", *col);
     return JS_NewString(js, str.c_str());
 }
 
