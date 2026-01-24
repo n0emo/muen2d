@@ -151,35 +151,35 @@ static auto is_key_pressed(JSContext *js, JSValueConst, int argc, JSValueConst *
     const auto args = js::unpack_args<KeyboardKey>(js, argc, argv);
     if (!args) return jsthrow(args.error());
     const auto [key] = *args;
-    return JS_NewBool(js, isKeyPressed(key));
+    return JS_NewBool(js, IsKeyPressed(key));
 }
 
 static auto is_key_pressed_repeat(JSContext *js, JSValueConst, int argc, JSValueConst *argv) -> JSValue {
     const auto args = js::unpack_args<KeyboardKey>(js, argc, argv);
     if (!args) return jsthrow(args.error());
     const auto [key] = *args;
-    return JS_NewBool(js, isKeyPressedRepeat(key));
+    return JS_NewBool(js, IsKeyPressedRepeat(key));
 }
 
 static auto is_key_down(JSContext *js, JSValueConst, int argc, JSValueConst *argv) -> JSValue {
     const auto args = js::unpack_args<KeyboardKey>(js, argc, argv);
     if (!args) return jsthrow(args.error());
     const auto [key] = *args;
-    return JS_NewBool(js, isKeyDown(key));
+    return JS_NewBool(js, IsKeyDown(key));
 }
 
 static auto is_key_released(JSContext *js, JSValueConst, int argc, JSValueConst *argv) -> JSValue {
     const auto args = js::unpack_args<KeyboardKey>(js, argc, argv);
     if (!args) return jsthrow(args.error());
     const auto [key] = *args;
-    return JS_NewBool(js, isKeyReleased(key));
+    return JS_NewBool(js, IsKeyReleased(key));
 }
 
 static auto is_key_up(JSContext *js, JSValueConst, int argc, JSValueConst *argv) -> JSValue {
     const auto args = js::unpack_args<KeyboardKey>(js, argc, argv);
     if (!args) return jsthrow(args.error());
     const auto [key] = *args;
-    return JS_NewBool(js, isKeyUp(key));
+    return JS_NewBool(js, IsKeyUp(key));
 }
 
 static const auto FUNCS = std::array {
