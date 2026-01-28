@@ -10,7 +10,7 @@
 
 #include <defer.hpp>
 
-namespace muen {
+namespace glint {
 
 auto FilesystemStore::open(std::filesystem::path base_path) noexcept -> Result<FilesystemStore> {
     auto store = FilesystemStore {std::move(base_path)};
@@ -152,4 +152,4 @@ ZipStore::~ZipStore() {
 
 ZipStore::ZipStore(zip_t *zip) : _zip(zip) {};
 
-} // namespace muen
+} // namespace glint

@@ -1,3 +1,5 @@
-# Muen2D
+# Glint Engine
 
-Simple game engine for simple 2D games written in JavaScript
+> /ɡlɪnt/ \[*noun*] &mdash; a small, bright flash of light
+
+Small and simple JavaScript game engine written in C++ using QuickJS

@@ -1,6 +1,6 @@
-import { BasicColor } from "muen:Color";
-import { Font } from "muen:Font";
-import { BasicVector2 } from "muen:Vector2";
+import { BasicColor } from "glint:Color";
+import { Font } from "glint:Font";
+import { BasicVector2 } from "glint:Vector2";
 
 interface BaseText {
     fontSize: number;

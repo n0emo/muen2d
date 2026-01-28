@@ -9,7 +9,7 @@
 
 using zip_t = struct zip;
 
-namespace muen {
+namespace glint {
 
 class IFileStore {
   public:
@@ -68,4 +68,4 @@ class ZipStore final: public IFileStore {
     ZipStore(zip_t *zip);
 };
 
-} // namespace muen
+} // namespace glint

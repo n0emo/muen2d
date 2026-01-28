@@ -9,7 +9,7 @@
 #include <defer.hpp>
 #include <plugins/math.hpp>
 
-namespace muen::js {
+namespace glint::js {
 
 template<>
 auto try_into<NPatchInfo>(const Value& val) noexcept -> JSResult<NPatchInfo> {
@@ -35,9 +35,9 @@ auto try_into<NPatchInfo>(const Value& val) noexcept -> JSResult<NPatchInfo> {
     return np;
 }
 
-} // namespace muen::js
+} // namespace glint::js
 
-namespace muen::plugins::graphics::npatch {
+namespace glint::plugins::graphics::npatch {
 
 auto NPatchClassData::from_value(const Value& val) -> JSResult<NPatchClassData *> {
     const auto data = static_cast<NPatchClassData *>(JS_GetOpaque(val.cget(), class_id<&NPATCH>(val.ctx())));
@@ -80,7 +80,7 @@ extern const JSClassDef NPATCH = {
 };
 
 auto module(JSContext *js) -> JSModuleDef * {
-    auto m = JS_NewCModule(js, "muen:NPatch", [](auto js, auto m) -> int {
+    auto m = JS_NewCModule(js, "glint:NPatch", [](auto js, auto m) -> int {
         JS_NewClass(JS_GetRuntime(js), js::class_id<&NPATCH>(js), &NPATCH);
 
         JSValue proto = JS_NewObject(js);
@@ -241,4 +241,4 @@ static auto to_string(JSContext *js, JSValue this_val, int, JSValue *) -> JSValu
     return JS_NewStringLen(js, str.c_str(), str.size());
 }
 
-} // namespace muen::plugins::graphics::npatch
+} // namespace glint::plugins::graphics::npatch

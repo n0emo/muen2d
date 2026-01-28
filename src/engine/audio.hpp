@@ -8,7 +8,7 @@
 #include <file_store.hpp>
 #include <raylib.hpp>
 
-namespace muen::engine::audio {
+namespace glint::engine::audio {
 
 using namespace gsl;
 
@@ -73,4 +73,4 @@ auto init() noexcept -> void;
 auto close() noexcept -> void;
 auto get() noexcept -> Audio&;
 
-} // namespace muen::engine::audio
+} // namespace glint::engine::audio

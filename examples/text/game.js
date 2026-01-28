@@ -1,8 +1,8 @@
-import Color from "muen:Color";
-import { Font } from "muen:Font";
-import graphics from "muen:graphics";
-import screen from "muen:screen";
-import Vector2 from "muen:Vector2";
+import Color from "glint:Color";
+import { Font } from "glint:Font";
+import graphics from "glint:graphics";
+import screen from "glint:screen";
+import Vector2 from "glint:Vector2";
 
 let font;
 
@@ -14,10 +14,17 @@ export const config = {
 
 export function load() {
     font = new Font({ path: "Blouse.ttf", name: "Blouse" });
+    console.log(font);
 }
 
 export function draw() {
-    graphics.text("Hello from muen!", screen.width * 0.5 - 100, screen.height * 0.5 - 16, 32, Color.fromHex("#eeeeee"));
+    graphics.text(
+        "Hello from glint!",
+        screen.width * 0.5 - 100,
+        screen.height * 0.5 - 16,
+        32,
+        Color.fromHex("#eeeeee"),
+    );
 
     graphics.textPro({
         text: "Pro move",

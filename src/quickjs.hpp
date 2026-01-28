@@ -15,7 +15,7 @@
 #include <error.hpp>
 #include <defer.hpp>
 
-namespace muen::js {
+namespace glint::js {
 
 using namespace gsl;
 
@@ -146,7 +146,7 @@ class Object {
     Object(Value&& value) noexcept;
 };
 
-class JSError: public muen::error::IError {
+class JSError: public glint::error::IError {
   private:
     Object _obj;
     std::source_location _loc;
@@ -231,9 +231,9 @@ auto display_type(JSValueConst val) -> czstring;
 
 auto display_type(const Value& val) -> czstring;
 
-} // namespace muen::js
+} // namespace glint::js
 
-namespace muen {
+namespace glint {
 
 [[nodiscard]]
 auto err(js::JSError e) noexcept -> Unexpected<Error>;
@@ -242,13 +242,13 @@ template<typename T>
 [[nodiscard]]
 auto err(const js::JSResult<T>& r) noexcept -> Unexpected<Error>;
 
-} // namespace muen
+} // namespace glint
 
 // --------------
 // Implementation
 // --------------
 
-namespace muen::js {
+namespace glint::js {
 
 template<typename T>
 auto Object::at(czstring name) const noexcept -> JSResult<T> {
@@ -404,13 +404,13 @@ auto unpack_args(JSContext *js, int argc, JSValueConst *argv) -> JSResult<std::t
     }(std::make_index_sequence<N> {});
 }
 
-} // namespace muen::js
+} // namespace glint::js
 
-namespace muen {
+namespace glint {
 
 template<typename T>
 auto err(const js::JSResult<T>& r) noexcept -> Unexpected<Error> {
     return Unexpected(static_cast<Error>(std::make_shared<js::JSError>(r.error())));
 }
 
-} // namespace muen
+} // namespace glint

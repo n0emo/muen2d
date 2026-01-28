@@ -15,7 +15,7 @@ if is_plat("windows") then
 	add_defines("_CRT_SECURE_NO_WARNINGS")
 end
 
-target("muen", function()
+target("glint", function()
 	set_kind("binary")
 	add_files(
 		"src/engine.cpp",

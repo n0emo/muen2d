@@ -8,7 +8,7 @@
 
 #include <defer.hpp>
 
-namespace muen::js {
+namespace glint::js {
 
 template<>
 auto try_into<Rectangle *>(const Value& val) noexcept -> JSResult<Rectangle *> {
@@ -41,9 +41,9 @@ auto try_into<Rectangle>(const Value& val) noexcept -> JSResult<Rectangle> {
     return rec;
 }
 
-} // namespace muen::js
+} // namespace glint::js
 
-namespace muen::plugins::math::rectangle {
+namespace glint::plugins::math::rectangle {
 
 using namespace gsl;
 
@@ -196,7 +196,7 @@ extern const JSClassDef RECTANGLE = {
 };
 
 auto module(JSContext *js) -> JSModuleDef * {
-    auto m = JS_NewCModule(js, "muen:Rectangle", [](auto js, auto m) -> int {
+    auto m = JS_NewCModule(js, "glint:Rectangle", [](auto js, auto m) -> int {
         const auto id = js::class_id<&RECTANGLE>(js);
         JS_NewClass(JS_GetRuntime(js), id, &RECTANGLE);
 
@@ -222,4 +222,4 @@ auto to_string(Rectangle rec) -> std::string {
     return fmt::format("Rectangle {{ x: {}, y: {}, width: {}, height: {} }}", rec.x, rec.y, rec.width, rec.height);
 }
 
-} // namespace muen::plugins::math::rectangle
+} // namespace glint::plugins::math::rectangle

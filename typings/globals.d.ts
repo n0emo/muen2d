@@ -1,7 +1,5 @@
-import { Console } from "muen:console";
-import * as muenMod from "muen";
+import { Console } from "glint:console";
 
 declare global {
     const console: Console;
-    const muen: typeof muenMod;
 }

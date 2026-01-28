@@ -3,7 +3,7 @@
 
 #include <spdlog/spdlog.h>
 
-namespace muen::plugins::console {
+namespace glint::plugins::console {
 
 // NOLINTNEXTLINE
 static constexpr char CONSOLE_LOAD[] = {
@@ -13,14 +13,14 @@ static constexpr char CONSOLE_LOAD[] = {
 auto plugin(JSContext *js) -> EnginePlugin {
     return EnginePlugin {
         .name = "console",
-        .c_modules = {{"muen:console", module(js)}},
+        .c_modules = {{"glint:console", module(js)}},
         .load = [=]() -> Result<> {
             spdlog::info("Initializing console");
-            auto ret = JS_Eval(js, CONSOLE_LOAD, sizeof(CONSOLE_LOAD) - 1, "muen:console/load.js", JS_EVAL_TYPE_MODULE);
+            auto ret = JS_Eval(js, CONSOLE_LOAD, sizeof(CONSOLE_LOAD) - 1, "glint:console/load.js", JS_EVAL_TYPE_MODULE);
             JS_FreeValue(js, ret);
             return {};
         },
     };
 }
 
-} // namespace muen::plugins::console
+} // namespace glint::plugins::console

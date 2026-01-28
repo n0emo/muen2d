@@ -10,7 +10,7 @@
 
 #include <defer.hpp>
 
-namespace muen::js {
+namespace glint::js {
 
 template<>
 auto try_into<Vector2 *>(const Value& val) noexcept -> JSResult<Vector2 *> {
@@ -36,9 +36,9 @@ auto try_into<Vector2>(const Value& val) noexcept -> JSResult<Vector2> {
     return vec;
 }
 
-} // namespace muen::js
+} // namespace glint::js
 
-namespace muen::plugins::math::vector2 {
+namespace glint::plugins::math::vector2 {
 
 using namespace gsl;
 
@@ -474,7 +474,7 @@ extern const JSClassDef VECTOR2 = {
 };
 
 auto module(JSContext *js) -> JSModuleDef * {
-    auto m = JS_NewCModule(js, "muen:Vector2", [](auto js, auto m) -> int {
+    auto m = JS_NewCModule(js, "glint:Vector2", [](auto js, auto m) -> int {
         JS_NewClass(JS_GetRuntime(js), js::class_id<&VECTOR2>(js), &VECTOR2);
 
         JSValue proto = JS_NewObject(js);
@@ -499,4 +499,4 @@ auto to_string(::Vector2 vec) -> std::string {
     return fmt::format("Vector2 {{ x: {}, y: {} }}", vec.x, vec.y);
 }
 
-} // namespace muen::plugins::math::vector2
+} // namespace glint::plugins::math::vector2
