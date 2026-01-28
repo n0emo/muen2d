@@ -11,7 +11,7 @@
 #include <defer.hpp>
 #include <plugins/math.hpp>
 
-namespace muen::js {
+namespace glint::js {
 
 static const auto BUTTON_MAP = std::unordered_map<std::string, MouseButton> {
     {"left", MOUSE_BUTTON_LEFT},
@@ -59,9 +59,9 @@ auto try_into<MouseCursor>(const Value& val) noexcept -> JSResult<MouseCursor> {
     }
 }
 
-} // namespace muen::js
+} // namespace glint::js
 
-namespace muen::plugins::window::mouse {
+namespace glint::plugins::window::mouse {
 
 using namespace gsl;
 
@@ -190,7 +190,7 @@ static const auto FUNCS = std::array {
 };
 
 auto module(JSContext *js) -> JSModuleDef * {
-    auto m = JS_NewCModule(js, "muen:mouse", [](auto js, auto m) -> int {
+    auto m = JS_NewCModule(js, "glint:mouse", [](auto js, auto m) -> int {
         auto o = JS_NewObject(js);
 
         JS_SetPropertyFunctionList(js, o, FUNCS.data(), int {FUNCS.size()});
@@ -207,4 +207,4 @@ auto module(JSContext *js) -> JSModuleDef * {
     return m;
 }
 
-} // namespace muen::plugins::window::mouse
+} // namespace glint::plugins::window::mouse

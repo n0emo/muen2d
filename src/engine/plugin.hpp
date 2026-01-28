@@ -8,7 +8,7 @@
 
 #include <error.hpp>
 
-namespace muen::plugins {
+namespace glint::plugins {
 
 struct EnginePlugin {
     std::string name {};
@@ -20,4 +20,4 @@ struct EnginePlugin {
     std::function<auto()->Result<>> draw = nullptr;
 };
 
-} // namespace muen::plugins
+} // namespace glint::plugins

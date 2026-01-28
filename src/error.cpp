@@ -4,7 +4,7 @@
 
 #include <fmt/format.h>
 
-namespace muen::error {
+namespace glint::error {
 
 auto IError::msg() const noexcept -> std::string try { return "Generic error"; } catch (...) {
     return {};
@@ -58,9 +58,9 @@ auto free_ptr(owner<IError *> e) noexcept -> void {
     delete e;
 }
 
-} // namespace muen::error
+} // namespace glint::error
 
-namespace muen {
+namespace glint {
 
 auto err(Error e) noexcept -> Unexpected<Error> {
     return Unexpected(std::move(e));
@@ -74,4 +74,4 @@ auto err(std::exception& e, std::source_location loc) noexcept -> Unexpected<Err
     return Unexpected(static_cast<Error>(std::make_shared<error::StdError>(e, loc)));
 }
 
-} // namespace muen
+} // namespace glint

@@ -1,6 +1,6 @@
-import screen from "muen:screen";
-import graphics from "muen:graphics";
-import Vector2 from "muen:Vector2";
+import screen from "glint:screen";
+import graphics from "glint:graphics";
+import Vector2 from "glint:Vector2";
 
 export class Ball {
     constructor(x, y, angle, color) {

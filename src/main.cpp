@@ -15,7 +15,7 @@
 #include <file_store.hpp>
 
 auto main(int argc, char **argv) noexcept -> int try {
-    using namespace muen;
+    using namespace glint;
 
     spdlog::cfg::load_env_levels();
 
@@ -69,6 +69,6 @@ auto main(int argc, char **argv) noexcept -> int try {
 } catch (std::exception& e) {
     // NOLINTBEGIN: fmt::println throws exception
     fprintf(stderr, "Unexpected error: %s\n", e.what());
-    fprintf(stderr, "Please file an issue at https://github.com/n0emo/muen2d/issues/new\n");
+    fprintf(stderr, "Please file an issue at https://github.com/glint-engine/glint/issues/new\n");
     // NOLINTEND
 }

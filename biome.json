@@ -10,7 +10,7 @@
   },
   "linter": {
     "enabled": true,
-    "includes": ["./muen2djs/**/*.js", "./muen2djs/**/*.d.ts"],
+    "includes": ["./examples/**/*.js", "./typings/**/*.d.ts"],
     "rules": {}
   },
   "assist": {

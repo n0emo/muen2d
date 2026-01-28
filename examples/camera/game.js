@@ -1,8 +1,8 @@
-import Camera from "muen:Camera";
-import graphics from "muen:graphics";
-import Color from "muen:Color";
-import screen from "muen:screen";
-import Vector2 from "muen:Vector2";
+import Camera from "glint:Camera";
+import graphics from "glint:graphics";
+import Color from "glint:Color";
+import screen from "glint:screen";
+import Vector2 from "glint:Vector2";
 
 const camera = Camera.default();
 const bg = Color.fromHex("#181818");

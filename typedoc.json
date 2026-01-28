@@ -1,6 +1,6 @@
 {
   "$schema": "https://typedoc.org/schema.json",
-  "name": "muen2d",
+  "name": "Glint Engine",
   "githubPages": true,
   "entryPoints": ["typings/**/*.d.ts"],
   "out": "docs",

@@ -1,7 +1,7 @@
-import graphics from "muen:graphics";
-import Color from "muen:Color";
-import Texture from "muen:Texture";
-import Vector2 from "muen:Vector2";
+import graphics from "glint:graphics";
+import Color from "glint:Color";
+import Texture from "glint:Texture";
+import Vector2 from "glint:Vector2";
 
 export const config = {
     window: {
@@ -10,7 +10,7 @@ export const config = {
 };
 
 const bgColor = Color.fromHex("#181818");
-let t = undefined;
+let t;
 
 export function load() {
     const t1 = new Texture("cat.jpg");

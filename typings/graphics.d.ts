@@ -1,11 +1,10 @@
-import Camera from "muen:Camera";
-import { BasicColor } from "muen:Color";
-import { Font } from "muen:Font";
-import NPatch from "muen:NPatch";
-import { BasicRectangle } from "muen:Rectangle";
-import { Text } from "muen:Text";
-import Texture from "muen:Texture";
-import { BasicVector2 } from "muen:Vector2";
+import Camera from "glint:Camera";
+import { BasicColor } from "glint:Color";
+import NPatch from "glint:NPatch";
+import { BasicRectangle } from "glint:Rectangle";
+import { Text } from "glint:Text";
+import Texture from "glint:Texture";
+import { BasicVector2 } from "glint:Vector2";
 
 export interface Graphics {
     clear(color: BasicColor): Graphics;

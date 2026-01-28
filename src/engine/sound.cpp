@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-namespace muen::engine::audio::sound {
+namespace glint::engine::audio::sound {
 
 auto load(const std::filesystem::path& name, IFileStore& store) noexcept -> Result<Sound> {
     auto data = store.read_bytes(name);
@@ -77,4 +77,4 @@ auto set_pitch(Sound& self, float pitch) noexcept -> void {
     SetSoundPitch(self.sound, pitch);
 }
 
-} // namespace muen::engine::audio::sound
+} // namespace glint::engine::audio::sound

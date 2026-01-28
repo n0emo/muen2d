@@ -7,7 +7,7 @@
 #include <engine/window.hpp>
 #include <utility>
 
-namespace muen {
+namespace glint {
 
 extern "C" auto module_loader(JSContext *ctx, const char *module_name, void *opaque) noexcept -> JSModuleDef *;
 auto read_config(js::Object& ns) -> Result<GameConfig>;
@@ -398,7 +398,7 @@ extern "C" auto module_loader(JSContext *ctx, const char *module_name, void *opa
     }
 }
 
-#define MUEN_GAMECONFIG_READ_OPTIONAL(object, variable, jsname)                                                        \
+#define glint_GAMECONFIG_READ_OPTIONAL(object, variable, jsname)                                                       \
     do { /* NOLINT */                                                                                                  \
         if (auto v = (object).at<std::optional<decltype(variable)>>(#jsname)) {                                        \
             if (*v) (variable) = **v;                                                                                  \
@@ -419,31 +419,31 @@ auto read_config(js::Object& ns) -> Result<GameConfig> {
     if (!window_obj_result) return err(window_obj_result);
     if (!window_obj_result->has_value()) return config;
     auto window_obj = std::move(**window_obj_result);
-    MUEN_GAMECONFIG_READ_OPTIONAL(window_obj, config.window.title, title);
-    MUEN_GAMECONFIG_READ_OPTIONAL(window_obj, config.window.width, width);
-    MUEN_GAMECONFIG_READ_OPTIONAL(window_obj, config.window.height, height);
-    MUEN_GAMECONFIG_READ_OPTIONAL(window_obj, config.window.fps, fps);
-    MUEN_GAMECONFIG_READ_OPTIONAL(window_obj, config.window.vsync_hint, vsync);
-    MUEN_GAMECONFIG_READ_OPTIONAL(window_obj, config.window.fullscreen_mode, fullscreenMode);
-    MUEN_GAMECONFIG_READ_OPTIONAL(window_obj, config.window.resizable, resizable);
-    MUEN_GAMECONFIG_READ_OPTIONAL(window_obj, config.window.undecorated, undecorated);
-    MUEN_GAMECONFIG_READ_OPTIONAL(window_obj, config.window.hidden, hidden);
-    MUEN_GAMECONFIG_READ_OPTIONAL(window_obj, config.window.minimized, minimized);
-    MUEN_GAMECONFIG_READ_OPTIONAL(window_obj, config.window.maximized, maximized);
-    MUEN_GAMECONFIG_READ_OPTIONAL(window_obj, config.window.unfocused, unfocused);
-    MUEN_GAMECONFIG_READ_OPTIONAL(window_obj, config.window.topmost, topmost);
-    MUEN_GAMECONFIG_READ_OPTIONAL(window_obj, config.window.always_run, alwaysRun);
-    MUEN_GAMECONFIG_READ_OPTIONAL(window_obj, config.window.transparent, transparent);
-    MUEN_GAMECONFIG_READ_OPTIONAL(window_obj, config.window.highdpi, highdpi);
-    MUEN_GAMECONFIG_READ_OPTIONAL(window_obj, config.window.mouse_passthrough, mousePassthrough);
-    MUEN_GAMECONFIG_READ_OPTIONAL(window_obj, config.window.borderless_windowed_mode, borderlessWindowedMode);
-    MUEN_GAMECONFIG_READ_OPTIONAL(window_obj, config.window.msaa_4x_hint, msaa4x);
-    MUEN_GAMECONFIG_READ_OPTIONAL(window_obj, config.window.interlaced_hint, interlaced);
+    glint_GAMECONFIG_READ_OPTIONAL(window_obj, config.window.title, title);
+    glint_GAMECONFIG_READ_OPTIONAL(window_obj, config.window.width, width);
+    glint_GAMECONFIG_READ_OPTIONAL(window_obj, config.window.height, height);
+    glint_GAMECONFIG_READ_OPTIONAL(window_obj, config.window.fps, fps);
+    glint_GAMECONFIG_READ_OPTIONAL(window_obj, config.window.vsync_hint, vsync);
+    glint_GAMECONFIG_READ_OPTIONAL(window_obj, config.window.fullscreen_mode, fullscreenMode);
+    glint_GAMECONFIG_READ_OPTIONAL(window_obj, config.window.resizable, resizable);
+    glint_GAMECONFIG_READ_OPTIONAL(window_obj, config.window.undecorated, undecorated);
+    glint_GAMECONFIG_READ_OPTIONAL(window_obj, config.window.hidden, hidden);
+    glint_GAMECONFIG_READ_OPTIONAL(window_obj, config.window.minimized, minimized);
+    glint_GAMECONFIG_READ_OPTIONAL(window_obj, config.window.maximized, maximized);
+    glint_GAMECONFIG_READ_OPTIONAL(window_obj, config.window.unfocused, unfocused);
+    glint_GAMECONFIG_READ_OPTIONAL(window_obj, config.window.topmost, topmost);
+    glint_GAMECONFIG_READ_OPTIONAL(window_obj, config.window.always_run, alwaysRun);
+    glint_GAMECONFIG_READ_OPTIONAL(window_obj, config.window.transparent, transparent);
+    glint_GAMECONFIG_READ_OPTIONAL(window_obj, config.window.highdpi, highdpi);
+    glint_GAMECONFIG_READ_OPTIONAL(window_obj, config.window.mouse_passthrough, mousePassthrough);
+    glint_GAMECONFIG_READ_OPTIONAL(window_obj, config.window.borderless_windowed_mode, borderlessWindowedMode);
+    glint_GAMECONFIG_READ_OPTIONAL(window_obj, config.window.msaa_4x_hint, msaa4x);
+    glint_GAMECONFIG_READ_OPTIONAL(window_obj, config.window.interlaced_hint, interlaced);
 
     return config;
 }
 
-} // namespace muen
+} // namespace glint
 
 #include "./engine/audio.cpp"
 #include "./engine/music.cpp"

@@ -3,7 +3,7 @@
  *
  * @example
  * ```js
- * import Sound from "muen:Sound";
+ * import Sound from "glint:Sound";
  *
  * let s = new Sound("sample.ogg");
  * s.play();

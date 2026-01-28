@@ -10,9 +10,9 @@ using Music = struct Music;
 
 using zip_t = struct zip;
 
-namespace muen {
+namespace glint {
 
 class Game;
 class Engine;
 
-} // namespace muen
+} // namespace glint

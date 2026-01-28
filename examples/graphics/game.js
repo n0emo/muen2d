@@ -1,7 +1,7 @@
-import graphics from "muen:graphics";
-import Color from "muen:Color";
-import Vector2 from "muen:Vector2";
-import Rectangle from "muen:Rectangle";
+import graphics from "glint:graphics";
+import Color from "glint:Color";
+import Vector2 from "glint:Vector2";
+import Rectangle from "glint:Rectangle";
 
 export const config = {
     window: {

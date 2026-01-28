@@ -12,7 +12,7 @@
 #include <defer.hpp>
 #include <error.hpp>
 
-namespace muen::js {
+namespace glint::js {
 
 template<>
 auto try_into<Color>(const Value& val) noexcept -> JSResult<Color> {
@@ -33,9 +33,9 @@ auto try_into<Color>(const Value& val) noexcept -> JSResult<Color> {
 
     return c;
 }
-} // namespace muen::js
+} // namespace glint::js
 
-namespace muen::plugins::graphics::color {
+namespace glint::plugins::graphics::color {
 
 auto ColorClassData::from_value(const Value& val) -> JSResult<ColorClassData *> {
     const auto data = static_cast<ColorClassData *>(JS_GetOpaque(val.cget(), class_id<&COLOR>(val.ctx())));
@@ -77,7 +77,7 @@ extern const JSClassDef COLOR = {
 };
 
 auto module(JSContext *js) -> JSModuleDef * {
-    auto m = JS_NewCModule(js, "muen:Color", [](auto js, auto m) -> int {
+    auto m = JS_NewCModule(js, "glint:Color", [](auto js, auto m) -> int {
         JS_NewClass(JS_GetRuntime(js), js::class_id<&COLOR>(js), &COLOR);
 
         JSValue proto = JS_NewObject(js);
@@ -247,4 +247,4 @@ static auto to_string(JSContext *js, JSValueConst this_val, int, JSValueConst *)
     return JS_NewString(js, str.c_str());
 }
 
-} // namespace muen::plugins::graphics::color
+} // namespace glint::plugins::graphics::color

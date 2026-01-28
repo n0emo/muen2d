@@ -5,7 +5,7 @@
 
 #include <spdlog/spdlog.h>
 
-namespace muen::engine::audio::music {
+namespace glint::engine::audio::music {
 
 using namespace gsl;
 
@@ -89,4 +89,4 @@ auto set_pitch(Music& self, float pitch) noexcept -> void {
     ::SetMusicPitch(self.music, self.pitch);
 }
 
-} // namespace muen::engine::audio::music
+} // namespace glint::engine::audio::music

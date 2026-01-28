@@ -2,7 +2,7 @@
 
 #include <raylib.h>
 
-namespace muen::engine::audio {
+namespace glint::engine::audio {
 
 auto init() noexcept -> void {
     InitAudioDevice();
@@ -18,4 +18,4 @@ auto get() noexcept -> Audio& {
     return audio;
 }
 
-} // namespace muen::plugins::audio
+} // namespace glint::plugins::audio

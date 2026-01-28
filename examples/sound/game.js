@@ -1,7 +1,7 @@
-import Sound from "muen:Sound";
-import Color from "muen:Color";
-import screen from "muen:screen";
-import graphics from "muen:graphics";
+import Sound from "glint:Sound";
+import Color from "glint:Color";
+import screen from "glint:screen";
+import graphics from "glint:graphics";
 
 class Game {
     constructor() {
@@ -49,7 +49,7 @@ class Game {
     }
 }
 
-let game = new Game();
+const game = new Game();
 
 export const config = {
     window: {

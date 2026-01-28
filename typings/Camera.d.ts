@@ -1,4 +1,4 @@
-import Vector2 from "muen:Vector2";
+import Vector2 from "glint:Vector2";
 
 export class Camera {
     /** Camera offset (displacement from target) */

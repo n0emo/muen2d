@@ -10,8 +10,8 @@ export interface BasicColor {
  *
  * @example
  * ```js
- * import Color from "muen:Color"
- * graphics from "muen:graphics"
+ * import Color from "glint:Color"
+ * graphics from "glint:graphics"
  *
  * let green = new Color(50, 200, 50);
  * graphics.clear(green);

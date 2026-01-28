@@ -14,7 +14,7 @@
 #include <resource_store.hpp>
 #include <data.hpp>
 
-namespace muen {
+namespace glint {
 
 using namespace gsl;
 
@@ -96,7 +96,7 @@ struct GameWindowConfig {
     int width = 800;
     int height = 600;
     int fps = 60;
-    std::string title = "muen2d";
+    std::string title = "Glint";
     bool vsync_hint = false;
     bool fullscreen_mode = false;
     bool resizable = false;
@@ -170,4 +170,4 @@ class Game {
 
 [[nodiscard]] auto load_music(not_null<JSRuntime *> js, const std::filesystem::path& path) noexcept -> Result<Music>;
 
-} // namespace muen
+} // namespace glint

@@ -3,7 +3,7 @@
 #include <cassert>
 #include <utility>
 
-namespace muen::js {
+namespace glint::js {
 
 Value::Owned::Owned(not_null<JSContext *> js, JSValue value) noexcept : _ctx(js), _value(value) {};
 
@@ -281,12 +281,12 @@ auto display_type(const Value& val) -> czstring {
     return display_type(val.cget().tag);
 }
 
-} // namespace muen::js
+} // namespace glint::js
 
-namespace muen {
+namespace glint {
 
 auto err(js::JSError e) noexcept -> Unexpected<Error> {
     return Unexpected(static_cast<Error>(std::make_shared<js::JSError>(std::move(e))));
 }
 
-} // namespace muen
+} // namespace glint

@@ -1,13 +1,13 @@
 #include <plugins/window.hpp>
 
-namespace muen::plugins::window {
+namespace glint::plugins::window {
 
 auto plugin(JSContext *js) -> EnginePlugin {
     return EnginePlugin {
         .name = "window",
         .c_modules = {
-            {"muen:screen", screen_module(js)},
-            {"muen:mouse", mouse::module(js)},
+            {"glint:screen", screen_module(js)},
+            {"glint:mouse", mouse::module(js)},
         },
     };
 }

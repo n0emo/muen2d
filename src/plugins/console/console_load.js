@@ -1,4 +1,4 @@
-import console from "muen:console";
+import console from "glint:console";
 
 Object.defineProperty(globalThis, "console", {
     value: console,

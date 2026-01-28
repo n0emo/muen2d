@@ -12,7 +12,7 @@
 #include <types.hpp>
 #include <defer.hpp>
 
-namespace muen::error {
+namespace glint::error {
 
 using namespace gsl;
 
@@ -104,9 +104,9 @@ auto create_ptr(std::string msg = "", std::source_location loc = std::source_loc
 /// Free raw pointer to error
 auto free_ptr(owner<IError *> e) noexcept -> void;
 
-} // namespace muen::error
+} // namespace glint::error
 
-namespace muen {
+namespace glint {
 
 using error::Error;
 using error::Result;
@@ -126,4 +126,4 @@ auto err(const Result<T, E>& r) noexcept -> Unexpected<E> {
     return Unexpected(r.error());
 }
 
-} // namespace muen
+} // namespace glint

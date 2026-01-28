@@ -12,7 +12,7 @@
 #include <error.hpp>
 #include <plugins/math.hpp>
 
-namespace muen::js {
+namespace glint::js {
 
 template<>
 auto try_into<Camera2D>(const Value& val) noexcept -> JSResult<Camera2D> {
@@ -34,9 +34,9 @@ auto try_into<Camera2D>(const Value& val) noexcept -> JSResult<Camera2D> {
     return cam;
 }
 
-} // namespace muen::js
+} // namespace glint::js
 
-namespace muen::plugins::graphics::camera {
+namespace glint::plugins::graphics::camera {
 
 auto CameraClassData::from_value(const Value& val) -> JSResult<CameraClassData *> {
     const auto data = static_cast<CameraClassData *>(JS_GetOpaque(val.cget(), class_id<&CAMERA>(val.ctx())));
@@ -80,7 +80,7 @@ extern const JSClassDef CAMERA = {
 };
 
 auto module(JSContext *js) -> JSModuleDef * {
-    auto m = JS_NewCModule(js, "muen:Camera", [](auto js, auto m) -> int {
+    auto m = JS_NewCModule(js, "glint:Camera", [](auto js, auto m) -> int {
         JS_NewClass(JS_GetRuntime(js), js::class_id<&CAMERA>(js), &CAMERA);
 
         JSValue proto = JS_NewObject(js);
@@ -214,4 +214,4 @@ static auto to_string(JSContext *js, JSValue this_val, int, JSValue *) -> ::JSVa
     return JS_NewString(js, str.c_str());
 }
 
-} // namespace muen::plugins::graphics::camera
+} // namespace glint::plugins::graphics::camera

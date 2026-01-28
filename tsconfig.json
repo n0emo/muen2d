@@ -7,8 +7,8 @@
     "moduleResolution": "bundler",
     "lib": ["ES2020"],
     "paths": {
-      "muen": ["./typings/muen.d.ts"],
-      "muen:*": ["./typings/*.d.ts"]
+      "glint": ["./typings/glint.d.ts"],
+      "glint:*": ["./typings/*.d.ts"]
     }
   },
   "include": ["./examples/**/*.js", "./typings/**/*.d.ts"],

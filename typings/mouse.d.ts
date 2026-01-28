@@ -1,4 +1,4 @@
-import Vector2, { BasicVector2 } from "muen:Vector2";
+import Vector2, { BasicVector2 } from "glint:Vector2";
 
 export type ButtonType = "left" | "right" | "middle" | "side" | "extra" | "forward" | "back";
 

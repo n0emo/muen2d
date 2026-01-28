@@ -11,7 +11,7 @@
 #include <plugins/math.hpp>
 #include <quickjs.hpp>
 
-namespace muen::js {
+namespace glint::js {
 struct Text {
     std::variant<std::string, int, std::vector<int>> text = {};
     float font_size = {};
@@ -62,9 +62,9 @@ auto try_into<Text>(const Value& val) noexcept -> JSResult<Text> {
     return text;
 }
 
-} // namespace muen::js
+} // namespace glint::js
 
-namespace muen::plugins::graphics {
+namespace glint::plugins::graphics {
 
 static auto clear(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {
     SPDLOG_TRACE("graphics.clear/{}", argc);
@@ -313,7 +313,7 @@ static const auto FUNCS = std::array {
 };
 
 auto module(JSContext *js) -> JSModuleDef * {
-    auto m = JS_NewCModule(js, "muen:graphics", [](auto js, auto m) -> int {
+    auto m = JS_NewCModule(js, "glint:graphics", [](auto js, auto m) -> int {
         auto o = JS_NewObject(js);
         JS_SetPropertyFunctionList(js, o, FUNCS.data(), int {FUNCS.size()});
         JS_SetModuleExport(js, m, "default", o);
@@ -326,4 +326,4 @@ auto module(JSContext *js) -> JSModuleDef * {
     return m;
 }
 
-} // namespace muen::plugins::graphics
+} // namespace glint::plugins::graphics

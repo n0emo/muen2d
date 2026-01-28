@@ -2,15 +2,15 @@
 
 #include <spdlog/spdlog.h>
 
-namespace muen::plugins::audio {
+namespace glint::plugins::audio {
 
 auto plugin(JSContext *js) -> EnginePlugin {
     return EnginePlugin {
         .name = "audio",
         .c_modules =
             {
-                {"muen:Music", music_class::module(js)},
-                {"muen:Sound", sound_class::module(js)},
+                {"glint:Music", music_class::module(js)},
+                {"glint:Sound", sound_class::module(js)},
             },
         .load = []() -> Result<> {
             engine::audio::init();
@@ -31,4 +31,4 @@ auto plugin(JSContext *js) -> EnginePlugin {
     };
 }
 
-} // namespace muen::plugins::audio
+} // namespace glint::plugins::audio

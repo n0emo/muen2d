@@ -11,7 +11,7 @@
 #include <defer.hpp>
 #include <plugins/math.hpp>
 
-namespace muen::js {
+namespace glint::js {
 
 static const auto KEY_MAP = std::unordered_map<std::string, KeyboardKey> {
     // Alphanumeric keys
@@ -141,9 +141,9 @@ auto try_into<KeyboardKey>(const Value& val) noexcept -> JSResult<KeyboardKey> {
     }
 }
 
-} // namespace muen::js
+} // namespace glint::js
 
-namespace muen::plugins::window::keyboard {
+namespace glint::plugins::window::keyboard {
 
 using namespace gsl;
 
@@ -191,7 +191,7 @@ static const auto FUNCS = std::array {
 };
 
 auto module(JSContext *js) -> JSModuleDef * {
-    auto m = JS_NewCModule(js, "muen:keyboard", [](auto js, auto m) -> int {
+    auto m = JS_NewCModule(js, "glint:keyboard", [](auto js, auto m) -> int {
         auto o = JS_NewObject(js);
 
         JS_SetPropertyFunctionList(js, o, FUNCS.data(), int {FUNCS.size()});
@@ -208,4 +208,4 @@ auto module(JSContext *js) -> JSModuleDef * {
     return m;
 }
 
-} // namespace muen::plugins::window::keyboard
+} // namespace glint::plugins::window::keyboard

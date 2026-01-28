@@ -11,7 +11,7 @@
 
 #include <file_store.hpp>
 
-namespace muen {
+namespace glint {
 
 using namespace gsl;
 
@@ -128,4 +128,4 @@ class ResourceStore {
     }
 };
 
-} // namespace muen
+} // namespace glint

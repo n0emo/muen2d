@@ -5,7 +5,7 @@
 #include <engine.hpp>
 #include <defer.hpp>
 
-namespace muen::js {
+namespace glint::js {
 
 using plugins::graphics::font::CLASS;
 using plugins::graphics::font::FontClassData;
@@ -41,9 +41,9 @@ auto try_into<FontOptions>(const Value& val) noexcept -> JSResult<FontOptions> t
     return Unexpected(JSError::plain_error(val.ctx(), fmt::format("Unexpected C++ exception: {}", e.what())));
 }
 
-} // namespace muen::js
+} // namespace glint::js
 
-namespace muen::plugins::graphics::font {
+namespace glint::plugins::graphics::font {
 
 using namespace gsl;
 
@@ -100,7 +100,7 @@ static const auto PROTO_FUNCS = std::array {
 };
 
 auto module(JSContext *js) -> JSModuleDef * {
-    auto m = JS_NewCModule(js, "muen:Font", [](auto js, auto m) -> int {
+    auto m = JS_NewCModule(js, "glint:Font", [](auto js, auto m) -> int {
         JS_NewClass(JS_GetRuntime(js), js::class_id<&CLASS>(js), &CLASS);
 
         auto proto = JS_NewObject(js);
@@ -188,4 +188,4 @@ static auto to_string(JSContext *js, JSValueConst this_val, int, JSValueConst *)
     return JS_NewStringLen(js, str.data(), str.size());
 }
 
-} // namespace muen::plugins::graphics::font
+} // namespace glint::plugins::graphics::font
