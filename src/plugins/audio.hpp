@@ -7,7 +7,7 @@
 #include <quickjs.hpp>
 #include <raylib.hpp>
 
-namespace muen::js {
+namespace glint::js {
 
 template<>
 auto try_into<engine::audio::Music *>(const Value& val) noexcept -> JSResult<engine::audio::Music *>;
@@ -15,9 +15,9 @@ auto try_into<engine::audio::Music *>(const Value& val) noexcept -> JSResult<eng
 template<>
 auto try_into<engine::audio::Sound *>(const Value& val) noexcept -> JSResult<engine::audio::Sound *>;
 
-} // namespace muen::js
+} // namespace glint::js
 
-namespace muen::plugins::audio {
+namespace glint::plugins::audio {
 
 using namespace gsl;
 
@@ -37,4 +37,4 @@ namespace sound_class {
     auto module(JSContext *js) -> ::JSModuleDef *;
 } // namespace sound_class
 
-} // namespace muen::plugins::audio
+} // namespace glint::plugins::audio

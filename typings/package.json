@@ -1,5 +1,5 @@
 {
-    "name": "@muen/typings",
-    "typings": "muen.d.ts",
+    "name": "@glint/typings",
+    "typings": "glint.d.ts",
     "files": ["./**/*.d.ts"]
 }

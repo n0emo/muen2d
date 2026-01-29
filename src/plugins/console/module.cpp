@@ -7,7 +7,7 @@
 
 #include <defer.hpp>
 
-namespace muen::plugins::console {
+namespace glint::plugins::console {
 
 using spdlog::level::level_enum;
 
@@ -58,7 +58,7 @@ const static auto FUNCS = std::array {
 };
 
 auto module(JSContext *js) -> JSModuleDef * {
-    auto m = JS_NewCModule(js, "muen:console", [](auto js, auto m) -> int {
+    auto m = JS_NewCModule(js, "glint:console", [](auto js, auto m) -> int {
         auto o = JS_NewObject(js);
         JS_SetPropertyFunctionList(js, o, FUNCS.data(), int{FUNCS.size()});
         JS_SetModuleExport(js, m, "default", o);

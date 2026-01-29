@@ -1,6 +1,6 @@
-import Color from "muen:Color";
-import graphics from "muen:graphics";
-import mouse from "muen:mouse";
+import Color from "glint:Color";
+import graphics from "glint:graphics";
+import mouse from "glint:mouse";
 
 export const config = {
     window: {

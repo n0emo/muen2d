@@ -5,7 +5,7 @@
 #include <quickjs.h>
 #include <raylib.h>
 
-namespace muen::plugins::window {
+namespace glint::plugins::window {
 
 static auto get_dt(::JSContext *js, ::JSValueConst) -> ::JSValue {
     return ::JS_NewFloat64(js, static_cast<double>(::GetFrameTime()));
@@ -31,7 +31,7 @@ const static auto funcs = std::array{
 };
 
 auto screen_module(::JSContext *js) -> ::JSModuleDef * {
-    auto m = ::JS_NewCModule(js, "muen:screen", [](auto js, auto m) -> int {
+    auto m = ::JS_NewCModule(js, "glint:screen", [](auto js, auto m) -> int {
         auto o = ::JS_NewObject(js);
 
         ::JS_SetPropertyFunctionList(js, o, funcs.data(), int{funcs.size()});
@@ -44,4 +44,4 @@ auto screen_module(::JSContext *js) -> ::JSModuleDef * {
 }
 
 
-} // namespace muen::plugins::window
+} // namespace glint::plugins::window

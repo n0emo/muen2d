@@ -8,7 +8,7 @@
 
 #include <engine.hpp>
 
-namespace muen::js {
+namespace glint::js {
 
 template<>
 auto try_into<engine::audio::Sound *>(const Value& val) noexcept -> JSResult<engine::audio::Sound *> {
@@ -18,9 +18,9 @@ auto try_into<engine::audio::Sound *>(const Value& val) noexcept -> JSResult<eng
     return ptr;
 }
 
-} // namespace muen::js
+} // namespace glint::js
 
-namespace muen::plugins::audio::sound_class {
+namespace glint::plugins::audio::sound_class {
 
 using namespace gsl;
 
@@ -144,7 +144,7 @@ static const auto SOUND_CLASS = JSClassDef {
 };
 
 auto module(JSContext *js) -> JSModuleDef * {
-    auto m = JS_NewCModule(js, "muen:sound", [](auto js, auto m) -> int {
+    auto m = JS_NewCModule(js, "glint:sound", [](auto js, auto m) -> int {
         const auto id = js::class_id<&SOUND>(js);
         JS_NewClass(JS_GetRuntime(js), id, &SOUND_CLASS);
 
@@ -165,4 +165,4 @@ auto module(JSContext *js) -> JSModuleDef * {
     return m;
 }
 
-} // namespace muen::plugins::audio::sound_class
+} // namespace glint::plugins::audio::sound_class

@@ -1,12 +1,12 @@
-import Rectangle from "muen:Rectangle";
+import Rectangle from "glint:Rectangle";
 
 /**
  * Texture, tex data stored in GPU memory (VRAM)
  *
  * @example
  * ```js
- * import Texture from "muen:Texture";
- * import graphics from "muen:graphics";
+ * import Texture from "glint:Texture";
+ * import graphics from "glint:graphics";
  *
  * // Load texture from file
  * let t = new Texture("sprite.png");

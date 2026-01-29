@@ -7,7 +7,7 @@
 #include <raylib.hpp>
 #include <resource_store.hpp>
 
-namespace muen {
+namespace glint {
 
 struct TextureData {
     rl::Texture texture;
@@ -83,4 +83,4 @@ struct FontData {
     }
 };
 
-} // namespace muen
+} // namespace glint

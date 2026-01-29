@@ -1,17 +1,17 @@
 #include <plugins/graphics.hpp>
 
-namespace muen::plugins::graphics {
+namespace glint::plugins::graphics {
 
 auto plugin(JSContext *js) -> EnginePlugin {
     return EnginePlugin {
         .name = "graphics",
         .c_modules = {
-            {"muen:Camera", camera::module(js)},
-            {"muen:Color", color::module(js)},
-            {"muen:Font", font::module(js)},
-            {"muen:NPatch", npatch::module(js)},
-            {"muen:Texture", texture::module(js)},
-            {"muen:graphics", module(js)},
+            {"glint:Camera", camera::module(js)},
+            {"glint:Color", color::module(js)},
+            {"glint:Font", font::module(js)},
+            {"glint:NPatch", npatch::module(js)},
+            {"glint:Texture", texture::module(js)},
+            {"glint:graphics", module(js)},
         },
         .draw = []() -> Result<> {
             ClearBackground(BLACK);

@@ -1,5 +1,5 @@
-import Music from "muen:Music";
-import screen from "muen:screen";
+import Music from "glint:Music";
+import screen from "glint:screen";
 
 let music;
 

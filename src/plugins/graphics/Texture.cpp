@@ -13,12 +13,12 @@
 #include <error.hpp>
 #include <plugins/math.hpp>
 
-namespace muen::plugins::graphics::texture {} // namespace muen::plugins::graphics::texture
+namespace glint::plugins::graphics::texture {} // namespace glint::plugins::graphics::texture
 
-namespace muen::js {
+namespace glint::js {
 
-using muen::plugins::graphics::texture::TEXTURE;
-using muen::plugins::graphics::texture::TextureClassData;
+using glint::plugins::graphics::texture::TEXTURE;
+using glint::plugins::graphics::texture::TextureClassData;
 using plugins::graphics::texture::TextureOptions;
 
 template<>
@@ -47,9 +47,9 @@ auto try_into<TextureOptions>(const Value& val) noexcept -> JSResult<TextureOpti
     return Unexpected(JSError::plain_error(val.ctx(), fmt::format("Unexpected C++ exception: {}", e.what())));
 }
 
-} // namespace muen::js
+} // namespace glint::js
 
-namespace muen::plugins::graphics::texture {
+namespace glint::plugins::graphics::texture {
 
 using namespace gsl;
 
@@ -104,7 +104,7 @@ extern const JSClassDef TEXTURE = {
 };
 
 auto module(JSContext *js) -> JSModuleDef * {
-    auto m = JS_NewCModule(js, "muen:Texture", [](auto js, auto m) -> int {
+    auto m = JS_NewCModule(js, "glint:Texture", [](auto js, auto m) -> int {
         JS_NewClass(JS_GetRuntime(js), js::class_id<&TEXTURE>(js), &TEXTURE);
 
         JSValue proto = JS_NewObject(js);
@@ -209,4 +209,4 @@ static auto to_string(JSContext *js, JSValueConst this_val, int, JSValueConst *)
     return JS_NewString(js, str.c_str());
 }
 
-} // namespace muen::plugins::graphics::texture
+} // namespace glint::plugins::graphics::texture

@@ -9,7 +9,7 @@
 #include <engine/audio.hpp>
 #include <engine.hpp>
 
-namespace muen::js {
+namespace glint::js {
 
 template<>
 auto try_into<engine::audio::Music *>(const Value& val) noexcept -> JSResult<engine::audio::Music *> {
@@ -19,9 +19,9 @@ auto try_into<engine::audio::Music *>(const Value& val) noexcept -> JSResult<eng
     return ptr;
 }
 
-} // namespace muen::js
+} // namespace glint::js
 
-namespace muen::plugins::audio::music_class {
+namespace glint::plugins::audio::music_class {
 
 using namespace gsl;
 
@@ -190,7 +190,7 @@ extern const JSClassDef MUSIC = {
 };
 
 auto module(JSContext *js) -> JSModuleDef * {
-    auto m = JS_NewCModule(js, "muen:music", [](auto js, auto m) -> int {
+    auto m = JS_NewCModule(js, "glint:music", [](auto js, auto m) -> int {
         JS_NewClass(JS_GetRuntime(js), js::class_id<&MUSIC>(js), &MUSIC);
 
         JSValue proto = JS_NewObject(js);
@@ -210,4 +210,4 @@ auto module(JSContext *js) -> JSModuleDef * {
     return m;
 }
 
-} // namespace muen::plugins::audio::music_class
+} // namespace glint::plugins::audio::music_class

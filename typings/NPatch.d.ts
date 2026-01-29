@@ -1,16 +1,16 @@
-import Rectangle from "muen:Rectangle";
+import Rectangle from "glint:Rectangle";
 
 /**
  * NPatch, n-patch layout info
  *
  * @example
  * ```js
- * import Texture from "muen:Texture";
- * import graphics from "muen:graphics";
- * import NPatch from "muen:NPatch";
- * import Rectangle from "muen:Rectangle";
- * import Vector2 from "muen:Vector2";
- * import Color from "muen:Color";
+ * import Texture from "glint:Texture";
+ * import graphics from "glint:graphics";
+ * import NPatch from "glint:NPatch";
+ * import Rectangle from "glint:Rectangle";
+ * import Vector2 from "glint:Vector2";
+ * import Color from "glint:Color";
  *
  * let texture = Texture.load("sprite.png");
  * let npatch = new NPatch(t.source, 50, 50, 50, 50);

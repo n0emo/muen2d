@@ -5,7 +5,7 @@
 
 #include <spdlog/spdlog.h>
 
-namespace muen::js {
+namespace glint::js {
 
 template<>
 auto try_into<const rl::RenderTexture *>(const Value& val) noexcept -> JSResult<const rl::RenderTexture *> {
@@ -14,9 +14,9 @@ auto try_into<const rl::RenderTexture *>(const Value& val) noexcept -> JSResult<
     return &(*data)->texture;
 }
 
-} // namespace muen::js
+} // namespace glint::js
 
-namespace muen::plugins::graphics::render_texture {
+namespace glint::plugins::graphics::render_texture {
 
 auto RenderTextureClassData::from_value(const Value& val) -> JSResult<RenderTextureClassData *> {
     const auto data =
@@ -48,7 +48,7 @@ extern const JSClassDef RENDER_TEXTURE = {
 };
 
 auto module(JSContext *js) -> JSModuleDef * {
-    auto m = JS_NewCModule(js, "muen:RenderTexture", [](auto js, auto m) -> auto {
+    auto m = JS_NewCModule(js, "glint:RenderTexture", [](auto js, auto m) -> auto {
         JS_NewClass(JS_GetRuntime(js), js::class_id<&RENDER_TEXTURE>(js), &RENDER_TEXTURE);
 
         auto proto = JS_NewObject(js);
@@ -146,4 +146,4 @@ static auto to_string(JSContext *js, JSValueConst this_val, int, JSValueConst *)
     return JS_NewStringLen(js, str.data(), str.size());
 }
 
-} // namespace muen::plugins::graphics::render_texture
+} // namespace glint::plugins::graphics::render_texture

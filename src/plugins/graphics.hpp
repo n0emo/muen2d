@@ -9,7 +9,7 @@
 #include <quickjs.hpp>
 #include <data.hpp>
 
-namespace muen::js {
+namespace glint::js {
 
 template<>
 auto try_into<Camera2D>(const Value& val) noexcept -> JSResult<Camera2D>;
@@ -29,9 +29,9 @@ auto try_into<const rl::Texture *>(const Value& val) noexcept -> JSResult<const 
 template<>
 auto try_into<const rl::RenderTexture *>(const Value& val) noexcept -> JSResult<const rl::RenderTexture *>;
 
-} // namespace muen::js
+} // namespace glint::js
 
-namespace muen::plugins::graphics {
+namespace glint::plugins::graphics {
 
 using namespace js;
 using namespace gsl;
@@ -139,4 +139,4 @@ namespace texture {
     auto module(JSContext *js) -> JSModuleDef *;
 } // namespace texture
 
-} // namespace muen::plugins::graphics
+} // namespace glint::plugins::graphics

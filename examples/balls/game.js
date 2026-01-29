@@ -1,6 +1,6 @@
-import Color from "muen:Color";
-import graphics from "muen:graphics";
-import screen from "muen:screen";
+import Color from "glint:Color";
+import graphics from "glint:graphics";
+import screen from "glint:screen";
 
 import { Ball } from "./Ball.js";
 
@@ -42,7 +42,7 @@ class Game {
 
 const randomByte = () => Math.floor(Math.random() * 256);
 
-let game = new Game();
+const game = new Game();
 
 export const config = {
     window: {
