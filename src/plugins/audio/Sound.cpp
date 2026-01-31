@@ -11,7 +11,7 @@
 namespace glint::js {
 
 template<>
-auto try_into<engine::audio::Sound *>(const Value& val) noexcept -> JSResult<engine::audio::Sound *> {
+auto convert_from_js<engine::audio::Sound *>(const Value& val) noexcept -> JSResult<engine::audio::Sound *> {
     const auto id = class_id<&plugins::audio::sound_class::SOUND>(val.ctx());
     auto ptr = static_cast<engine::audio::Sound *>(JS_GetOpaque(val.cget(), id));
     if (ptr == nullptr) return Unexpected(JSError::type_error(val.ctx(), "Not an instance of Sound"));
@@ -52,7 +52,7 @@ static auto sound_constructor(JSContext *js, JSValue new_target, int argc, JSVal
 }
 
 static auto sound_unload(JSContext *js, JSValueConst this_val, int, JSValueConst *) -> JSValue {
-    auto s = js::try_into<audio::Sound *>(js::borrow(js, this_val));
+    auto s = js::convert_from_js<audio::Sound *>(js::borrow(js, this_val));
     if (!s) return jsthrow(s.error());
     auto ptr = owner<Sound *>(*s);
     audio::get().sounds.erase(ptr);
@@ -61,65 +61,65 @@ static auto sound_unload(JSContext *js, JSValueConst this_val, int, JSValueConst
 }
 
 static auto sound_play(JSContext *js, JSValueConst this_val, int, JSValueConst *) -> JSValue {
-    auto s = js::try_into<audio::Sound *>(js::borrow(js, this_val));
+    auto s = js::convert_from_js<audio::Sound *>(js::borrow(js, this_val));
     if (!s) return jsthrow(s.error());
     sound::play(**s);
     return JS_UNDEFINED;
 }
 
 static auto sound_stop(JSContext *js, JSValueConst this_val, int, JSValueConst *) -> JSValue {
-    auto s = js::try_into<audio::Sound *>(js::borrow(js, this_val));
+    auto s = js::convert_from_js<audio::Sound *>(js::borrow(js, this_val));
     if (!s) return jsthrow(s.error());
     sound::stop(**s);
     return JS_UNDEFINED;
 }
 
 static auto sound_get_playing(JSContext *js, JSValueConst this_val) -> JSValue {
-    auto s = js::try_into<audio::Sound *>(js::borrow(js, this_val));
+    auto s = js::convert_from_js<audio::Sound *>(js::borrow(js, this_val));
     if (!s) return jsthrow(s.error());
     return JS_NewBool(js, sound::is_playing(**s));
 }
 
 static auto sound_get_volume(JSContext *js, JSValueConst this_val) -> JSValue {
-    auto s = js::try_into<audio::Sound *>(js::borrow(js, this_val));
+    auto s = js::convert_from_js<audio::Sound *>(js::borrow(js, this_val));
     if (!s) return jsthrow(s.error());
     return JS_NewFloat64(js, sound::get_volume(**s));
 }
 
 static auto sound_get_pan(JSContext *js, JSValueConst this_val) -> JSValue {
-    auto s = js::try_into<audio::Sound *>(js::borrow(js, this_val));
+    auto s = js::convert_from_js<audio::Sound *>(js::borrow(js, this_val));
     if (!s) return jsthrow(s.error());
     return JS_NewFloat64(js, sound::get_pan(**s));
 }
 
 static auto sound_get_pitch(JSContext *js, JSValueConst this_val) -> JSValue {
-    auto s = js::try_into<audio::Sound *>(js::borrow(js, this_val));
+    auto s = js::convert_from_js<audio::Sound *>(js::borrow(js, this_val));
     if (!s) return jsthrow(s.error());
     return JS_NewFloat64(js, sound::get_pitch(**s));
 }
 
 static auto sound_set_volume(JSContext *js, JSValueConst this_val, JSValueConst val) -> JSValue {
-    auto s = js::try_into<audio::Sound *>(js::borrow(js, this_val));
+    auto s = js::convert_from_js<audio::Sound *>(js::borrow(js, this_val));
     if (!s) return jsthrow(s.error());
-    auto volume = js::try_into<float>(js::borrow(js, val));
+    auto volume = js::convert_from_js<float>(js::borrow(js, val));
     if (!volume) return jsthrow(volume.error());
     sound::set_volume(**s, *volume);
     return JS_UNDEFINED;
 }
 
 static auto sound_set_pan(JSContext *js, JSValueConst this_val, JSValueConst val) -> JSValue {
-    auto s = js::try_into<audio::Sound *>(js::borrow(js, this_val));
+    auto s = js::convert_from_js<audio::Sound *>(js::borrow(js, this_val));
     if (!s) return jsthrow(s.error());
-    auto pan = js::try_into<float>(js::borrow(js, val));
+    auto pan = js::convert_from_js<float>(js::borrow(js, val));
     if (!pan) return jsthrow(pan.error());
     sound::set_pan(**s, *pan);
     return JS_UNDEFINED;
 }
 
 static auto sound_set_pitch(JSContext *js, JSValueConst this_val, JSValueConst val) -> JSValue {
-    auto s = js::try_into<audio::Sound *>(js::borrow(js, this_val));
+    auto s = js::convert_from_js<audio::Sound *>(js::borrow(js, this_val));
     if (!s) return jsthrow(s.error());
-    auto pitch = js::try_into<float>(js::borrow(js, val));
+    auto pitch = js::convert_from_js<float>(js::borrow(js, val));
     if (!pitch) return jsthrow(pitch.error());
     sound::set_pitch(**s, *pitch);
     return JS_UNDEFINED;

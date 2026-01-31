@@ -12,22 +12,22 @@
 namespace glint::js {
 
 template<>
-auto try_into<Camera2D>(const Value& val) noexcept -> JSResult<Camera2D>;
+auto convert_from_js<Camera2D>(const Value& val) noexcept -> JSResult<Camera2D>;
 
 template<>
-auto try_into<Color>(const Value& val) noexcept -> JSResult<Color>;
+auto convert_from_js<Color>(const Value& val) noexcept -> JSResult<Color>;
 
 template<>
-auto try_into<const rl::Font *>(const Value& val) noexcept -> JSResult<const rl::Font *>;
+auto convert_from_js<const rl::Font *>(const Value& val) noexcept -> JSResult<const rl::Font *>;
 
 template<>
-auto try_into<NPatchInfo>(const Value& val) noexcept -> JSResult<NPatchInfo>;
+auto convert_from_js<NPatchInfo>(const Value& val) noexcept -> JSResult<NPatchInfo>;
 
 template<>
-auto try_into<const rl::Texture *>(const Value& val) noexcept -> JSResult<const rl::Texture *>;
+auto convert_from_js<const rl::Texture *>(const Value& val) noexcept -> JSResult<const rl::Texture *>;
 
 template<>
-auto try_into<const rl::RenderTexture *>(const Value& val) noexcept -> JSResult<const rl::RenderTexture *>;
+auto convert_from_js<const rl::RenderTexture *>(const Value& val) noexcept -> JSResult<const rl::RenderTexture *>;
 
 } // namespace glint::js
 

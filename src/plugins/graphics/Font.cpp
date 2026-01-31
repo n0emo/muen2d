@@ -12,7 +12,7 @@ using plugins::graphics::font::FontClassData;
 using plugins::graphics::font::FontOptions;
 
 template<>
-auto try_into<const rl::Font *>(const Value& val) noexcept -> JSResult<const rl::Font *> {
+auto convert_from_js<const rl::Font *>(const Value& val) noexcept -> JSResult<const rl::Font *> {
     const auto data = static_cast<FontClassData *>(JS_GetOpaque(val.cget(), class_id<&CLASS>(val.ctx())));
     if (!data) return Unexpected(JSError::type_error(val.ctx(), "Not an instance of a Font"));
 
@@ -22,7 +22,7 @@ auto try_into<const rl::Font *>(const Value& val) noexcept -> JSResult<const rl:
 }
 
 template<>
-auto try_into<FontOptions>(const Value& val) noexcept -> JSResult<FontOptions> try {
+auto convert_from_js<FontOptions>(const Value& val) noexcept -> JSResult<FontOptions> try {
     auto o = FontOptions {};
     auto obj = Object::from_value(val);
     if (!obj) return Unexpected(obj.error());
@@ -177,12 +177,12 @@ static auto finalizer(JSRuntime *rt, JSValueConst this_val) -> void {
 }
 
 static auto get_valid(JSContext *js, JSValueConst this_val) -> JSValue {
-    const auto font = js::try_into<const rl::Font *>(js::borrow(js, this_val));
+    const auto font = js::convert_from_js<const rl::Font *>(js::borrow(js, this_val));
     return JS_NewBool(js, IsFontValid(**font));
 }
 
 static auto to_string(JSContext *js, JSValueConst this_val, int, JSValueConst *) -> JSValue {
-    const auto font = js::try_into<const rl::Font *>(js::borrow(js, this_val));
+    const auto font = js::convert_from_js<const rl::Font *>(js::borrow(js, this_val));
     if (!font) return jsthrow(font.error());
     const auto str = fmt::format("{}", **font);
     return JS_NewStringLen(js, str.data(), str.size());

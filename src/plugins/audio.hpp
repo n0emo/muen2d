@@ -10,10 +10,10 @@
 namespace glint::js {
 
 template<>
-auto try_into<engine::audio::Music *>(const Value& val) noexcept -> JSResult<engine::audio::Music *>;
+auto convert_from_js<engine::audio::Music *>(const Value& val) noexcept -> JSResult<engine::audio::Music *>;
 
 template<>
-auto try_into<engine::audio::Sound *>(const Value& val) noexcept -> JSResult<engine::audio::Sound *>;
+auto convert_from_js<engine::audio::Sound *>(const Value& val) noexcept -> JSResult<engine::audio::Sound *>;
 
 } // namespace glint::js
 

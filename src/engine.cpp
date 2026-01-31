@@ -274,13 +274,13 @@ auto Game::create(not_null<JSContext *> js, not_null<IFileStore *> store) -> Res
         "game.js",
         JS_EVAL_TYPE_MODULE | JS_EVAL_FLAG_STRICT | JS_EVAL_FLAG_COMPILE_ONLY
     );
-    if (JS_HasException(js)) return err(js::JSError::from_value(js::own(js, JS_GetException(js))));
+    if (JS_HasException(js)) return err(js::JSError(js::own(js, JS_GetException(js))));
 
     SPDLOG_TRACE("Evaluating game module");
     auto eval_ret = JS_EvalFunction(js, mod);
     defer(JS_FreeValue(js, eval_ret));
     auto eval_result = JS_PromiseResult(js, eval_ret);
-    if (JS_IsError(eval_result)) return err(js::JSError::from_value(js::own(js, eval_result)));
+    if (JS_IsError(eval_result)) return err(js::JSError(js::own(js, eval_result)));
     JS_FreeValue(js, eval_result);
 
     auto m = static_cast<JSModuleDef *>(JS_VALUE_GET_PTR(mod));

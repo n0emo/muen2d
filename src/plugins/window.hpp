@@ -7,10 +7,10 @@
 namespace glint::js {
 
 template<>
-auto try_into<MouseButton>(const Value& val) noexcept -> JSResult<MouseButton>;
+auto convert_from_js<MouseButton>(const Value& val) noexcept -> JSResult<MouseButton>;
 
 template<>
-auto try_into<MouseCursor>(const Value& val) noexcept -> JSResult<MouseCursor>;
+auto convert_from_js<MouseCursor>(const Value& val) noexcept -> JSResult<MouseCursor>;
 
 } // namespace glint::js
 

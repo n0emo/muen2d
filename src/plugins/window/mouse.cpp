@@ -38,8 +38,8 @@ static const auto CURSOR_MAP = std::unordered_map<std::string, MouseCursor> {
 };
 
 template<>
-auto try_into<MouseButton>(const Value& val) noexcept -> JSResult<MouseButton> {
-    auto str = try_into<std::string>(val);
+auto convert_from_js<MouseButton>(const Value& val) noexcept -> JSResult<MouseButton> {
+    auto str = convert_from_js<std::string>(val);
     if (!str) return Unexpected(str.error());
     if (auto it = BUTTON_MAP.find(*str); it != BUTTON_MAP.end()) {
         return it->second;
@@ -49,8 +49,8 @@ auto try_into<MouseButton>(const Value& val) noexcept -> JSResult<MouseButton> {
 }
 
 template<>
-auto try_into<MouseCursor>(const Value& val) noexcept -> JSResult<MouseCursor> {
-    auto str = try_into<std::string>(val);
+auto convert_from_js<MouseCursor>(const Value& val) noexcept -> JSResult<MouseCursor> {
+    auto str = convert_from_js<std::string>(val);
     if (!str) return Unexpected(str.error());
     if (auto it = CURSOR_MAP.find(*str); it != CURSOR_MAP.end()) {
         return it->second;
@@ -102,7 +102,7 @@ static auto get_y(JSContext *js, JSValueConst) -> JSValue {
 }
 
 static auto set_x(JSContext *js, JSValueConst, JSValueConst val) -> JSValue {
-    auto x = js::try_into<int>(js::borrow(js, val));
+    auto x = js::convert_from_js<int>(js::borrow(js, val));
     if (!x) return jsthrow(x.error());
     auto y = GetMouseY();
     SetMousePosition(*x, y);
@@ -110,7 +110,7 @@ static auto set_x(JSContext *js, JSValueConst, JSValueConst val) -> JSValue {
 }
 
 static auto set_y(JSContext *js, JSValueConst, JSValueConst val) -> JSValue {
-    auto y = js::try_into<int>(js::borrow(js, val));
+    auto y = js::convert_from_js<int>(js::borrow(js, val));
     if (!y) return jsthrow(y.error());
     auto x = GetMouseX();
     SetMousePosition(x, *y);
@@ -125,7 +125,7 @@ static auto get_position(JSContext *js, JSValueConst) -> JSValue {
 }
 
 static auto set_position(JSContext *js, JSValueConst, JSValueConst val) -> JSValue {
-    auto vec = js::try_into<Vector2>(js::borrow(js, val));
+    auto vec = js::convert_from_js<Vector2>(js::borrow(js, val));
     if (!vec) return jsthrow(vec.error());
     SetMousePosition(int(vec->x), int(vec->y));
     return JS_UNDEFINED;
@@ -139,7 +139,7 @@ static auto get_delta(JSContext *js, JSValueConst) -> JSValue {
 }
 
 static auto set_cursor(JSContext *js, JSValueConst, JSValueConst val) -> JSValue {
-    auto cursor = js::try_into<MouseCursor>(js::borrow(js, val));
+    auto cursor = js::convert_from_js<MouseCursor>(js::borrow(js, val));
     if (!cursor) return jsthrow(cursor.error());
     SetMouseCursor(*cursor);
     return JS_UNDEFINED;
@@ -150,7 +150,7 @@ static auto get_visible(JSContext *js, JSValueConst) -> JSValue {
 }
 
 static auto set_visible(JSContext *js, JSValueConst, JSValueConst val) -> JSValue {
-    auto visible = js::try_into<bool>(js::borrow(js, val));
+    auto visible = js::convert_from_js<bool>(js::borrow(js, val));
     if (!visible) return jsthrow(visible.error());
 
     if (*visible) ShowCursor();
@@ -160,7 +160,7 @@ static auto set_visible(JSContext *js, JSValueConst, JSValueConst val) -> JSValu
 }
 
 static auto set_enable(JSContext *js, JSValueConst, JSValueConst val) -> JSValue {
-    auto enable = js::try_into<bool>(js::borrow(js, val));
+    auto enable = js::convert_from_js<bool>(js::borrow(js, val));
     if (!enable) return jsthrow(enable.error());
 
     if (*enable) EnableCursor();

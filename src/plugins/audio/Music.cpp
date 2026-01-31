@@ -12,7 +12,7 @@
 namespace glint::js {
 
 template<>
-auto try_into<engine::audio::Music *>(const Value& val) noexcept -> JSResult<engine::audio::Music *> {
+auto convert_from_js<engine::audio::Music *>(const Value& val) noexcept -> JSResult<engine::audio::Music *> {
     const auto id = js::class_id<&plugins::audio::music_class::MUSIC>(val.ctx());
     auto ptr = static_cast<engine::audio::Music *>(JS_GetOpaque(val.cget(), id));
     if (ptr == nullptr) return Unexpected(JSError::type_error(val.ctx(), "Not an instance of Music"));
@@ -54,7 +54,7 @@ static auto music_constructor(JSContext *js, JSValue new_target, int argc, JSVal
 }
 
 static auto music_unload(JSContext *js, JSValueConst this_val, int, JSValueConst *) -> JSValue {
-    auto m = try_into<audio::Music *>(js::borrow(js, this_val));
+    auto m = convert_from_js<audio::Music *>(js::borrow(js, this_val));
     if (!m) return jsthrow(m.error());
     auto ptr = owner<Music *>(*m);
     audio::get().musics.erase(ptr);
@@ -63,35 +63,35 @@ static auto music_unload(JSContext *js, JSValueConst this_val, int, JSValueConst
 }
 
 static auto music_play(JSContext *js, JSValueConst this_val, int, JSValueConst *) -> JSValue {
-    auto m = try_into<audio::Music *>(js::borrow(js, this_val));
+    auto m = convert_from_js<audio::Music *>(js::borrow(js, this_val));
     if (!m) return jsthrow(m.error());
     music::play(**m);
     return JS_UNDEFINED;
 }
 
 static auto music_stop(JSContext *js, JSValueConst this_val, int, JSValueConst *) -> JSValue {
-    auto m = try_into<audio::Music *>(js::borrow(js, this_val));
+    auto m = convert_from_js<audio::Music *>(js::borrow(js, this_val));
     if (!m) return jsthrow(m.error());
     music::stop(**m);
     return JS_UNDEFINED;
 }
 
 static auto music_pause(JSContext *js, JSValueConst this_val, int, JSValueConst *) -> JSValue {
-    auto m = try_into<audio::Music *>(js::borrow(js, this_val));
+    auto m = convert_from_js<audio::Music *>(js::borrow(js, this_val));
     if (!m) return jsthrow(m.error());
     music::pause(**m);
     return JS_UNDEFINED;
 }
 
 static auto music_resume(JSContext *js, JSValueConst this_val, int, JSValueConst *) -> JSValue {
-    auto m = try_into<audio::Music *>(js::borrow(js, this_val));
+    auto m = convert_from_js<audio::Music *>(js::borrow(js, this_val));
     if (!m) return jsthrow(m.error());
     music::resume(**m);
     return JS_UNDEFINED;
 }
 
 static auto music_seek(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {
-    auto m = try_into<audio::Music *>(js::borrow(js, this_val));
+    auto m = convert_from_js<audio::Music *>(js::borrow(js, this_val));
     if (!m) return jsthrow(m.error());
     const auto args = js::unpack_args<float>(js, argc, argv);
     if (!args) return jsthrow(args.error());
@@ -101,67 +101,67 @@ static auto music_seek(JSContext *js, JSValueConst this_val, int argc, JSValueCo
 }
 
 static auto music_get_playing(JSContext *js, JSValueConst this_val) -> JSValue {
-    auto m = try_into<audio::Music *>(js::borrow(js, this_val));
+    auto m = convert_from_js<audio::Music *>(js::borrow(js, this_val));
     if (!m) return jsthrow(m.error());
     return JS_NewBool(js, music::is_playing(**m));
 }
 
 static auto music_get_looping(JSContext *js, JSValueConst this_val) -> JSValue {
-    auto m = try_into<audio::Music *>(js::borrow(js, this_val));
+    auto m = convert_from_js<audio::Music *>(js::borrow(js, this_val));
     if (!m) return jsthrow(m.error());
     return JS_NewBool(js, music::get_looping(**m));
 }
 
 static auto music_get_volume(JSContext *js, JSValueConst this_val) -> JSValue {
-    auto m = try_into<audio::Music *>(js::borrow(js, this_val));
+    auto m = convert_from_js<audio::Music *>(js::borrow(js, this_val));
     if (!m) return jsthrow(m.error());
     return JS_NewFloat64(js, music::get_volume(**m));
 }
 
 static auto music_get_pan(JSContext *js, JSValueConst this_val) -> JSValue {
-    auto m = try_into<audio::Music *>(js::borrow(js, this_val));
+    auto m = convert_from_js<audio::Music *>(js::borrow(js, this_val));
     if (!m) return jsthrow(m.error());
     return JS_NewFloat64(js, music::get_pan(**m));
 }
 
 static auto music_get_pitch(JSContext *js, JSValueConst this_val) -> JSValue {
-    auto m = try_into<audio::Music *>(js::borrow(js, this_val));
+    auto m = convert_from_js<audio::Music *>(js::borrow(js, this_val));
     if (!m) return jsthrow(m.error());
     return JS_NewFloat64(js, music::get_pitch(**m));
 }
 
 static auto music_set_looping(JSContext *js, JSValueConst this_val, JSValueConst val) -> JSValue {
-    auto m = try_into<audio::Music *>(js::borrow(js, this_val));
+    auto m = convert_from_js<audio::Music *>(js::borrow(js, this_val));
     if (!m) return jsthrow(m.error());
 
-    const auto looping = js::try_into<bool>(js::borrow(js, val));
+    const auto looping = js::convert_from_js<bool>(js::borrow(js, val));
     if (!looping) return jsthrow(looping.error());
     music::set_looping(**m, *looping);
     return JS_UNDEFINED;
 }
 
 static auto music_set_volume(JSContext *js, JSValueConst this_val, JSValueConst val) -> JSValue {
-    auto m = try_into<audio::Music *>(js::borrow(js, this_val));
+    auto m = convert_from_js<audio::Music *>(js::borrow(js, this_val));
     if (!m) return jsthrow(m.error());
-    const auto volume = js::try_into<float>(js::borrow(js, val));
+    const auto volume = js::convert_from_js<float>(js::borrow(js, val));
     if (!volume) return jsthrow(volume.error());
     music::set_volume(**m, *volume);
     return JS_UNDEFINED;
 }
 
 static auto music_set_pan(JSContext *js, JSValueConst this_val, JSValueConst val) -> JSValue {
-    auto m = try_into<audio::Music *>(js::borrow(js, this_val));
+    auto m = convert_from_js<audio::Music *>(js::borrow(js, this_val));
     if (!m) return jsthrow(m.error());
-    const auto pan = js::try_into<float>(js::borrow(js, val));
+    const auto pan = js::convert_from_js<float>(js::borrow(js, val));
     if (!pan) return jsthrow(pan.error());
     music::set_pan(**m, *pan);
     return JS_UNDEFINED;
 }
 
 static auto music_set_pitch(JSContext *js, JSValueConst this_val, JSValueConst val) -> JSValue {
-    auto m = try_into<audio::Music *>(js::borrow(js, this_val));
+    auto m = convert_from_js<audio::Music *>(js::borrow(js, this_val));
     if (!m) return jsthrow(m.error());
-    const auto pitch = js::try_into<float>(js::borrow(js, val));
+    const auto pitch = js::convert_from_js<float>(js::borrow(js, val));
     if (!pitch) return jsthrow(pitch.error());
     music::set_pitch(**m, *pitch);
     return JS_UNDEFINED;

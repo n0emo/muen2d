@@ -15,9 +15,7 @@ struct TextureData {
 
     using data_type = rl::Texture;
 
-    auto get() noexcept -> rl::Texture& {
-        return texture;
-    }
+    auto get() noexcept -> rl::Texture& { return texture; }
 
     static auto load(const std::filesystem::path& name, IFileStore& file_store) noexcept -> TextureData try {
         auto buf = file_store.read_bytes(name);
@@ -47,9 +45,7 @@ struct FontData {
 
     using data_type = rl::Font;
 
-    auto get() noexcept -> rl::Font& {
-        return font;
-    }
+    auto get() noexcept -> rl::Font& { return font; }
 
     static auto load(
         const std::filesystem::path& name,

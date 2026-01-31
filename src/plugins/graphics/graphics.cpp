@@ -24,7 +24,7 @@ struct Text {
 };
 
 template<>
-auto try_into<Text>(const Value& val) noexcept -> JSResult<Text> {
+auto convert_from_js<Text>(const Value& val) noexcept -> JSResult<Text> {
     auto text = Text {};
     auto obj = Object::from_value(val);
     if (!obj) return Unexpected(obj.error());

@@ -7,7 +7,7 @@ auto plugin(JSContext *js) -> EnginePlugin {
         .name = "math",
         .c_modules = {
             {"glint:Vector2", vector2::module(js)},
-            {"glint:Rectangle", rectangle::module(js)},
+            {"glint:Rectangle", rectangle_module(js)},
         },
 
     };

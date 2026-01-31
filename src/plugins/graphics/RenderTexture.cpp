@@ -8,7 +8,7 @@
 namespace glint::js {
 
 template<>
-auto try_into<const rl::RenderTexture *>(const Value& val) noexcept -> JSResult<const rl::RenderTexture *> {
+auto convert_from_js<const rl::RenderTexture *>(const Value& val) noexcept -> JSResult<const rl::RenderTexture *> {
     auto data = plugins::graphics::render_texture::RenderTextureClassData::from_value(val);
     if (!data) return Unexpected(data.error());
     return &(*data)->texture;
@@ -116,7 +116,7 @@ static auto get_width(JSContext *js, JSValueConst this_val) -> JSValue {
 static auto set_width(JSContext *js, JSValueConst this_val, JSValueConst val) -> JSValue {
     auto data = RenderTextureClassData::from_value(borrow(js, this_val));
     if (!data) return jsthrow(data.error());
-    auto width = js::try_into<int>(js::borrow(js, val));
+    auto width = js::convert_from_js<int>(js::borrow(js, val));
     if (!width) return jsthrow(width.error());
     auto height = (*data)->texture.texture.height;
     (*data)->texture = rl::RenderTexture::load(*width, height);
@@ -132,7 +132,7 @@ static auto get_height(JSContext *js, JSValueConst this_val) -> JSValue {
 static auto set_height(JSContext *js, JSValueConst this_val, JSValueConst val) -> JSValue {
     auto data = RenderTextureClassData::from_value(borrow(js, this_val));
     if (!data) return jsthrow(data.error());
-    auto height = js::try_into<int>(js::borrow(js, val));
+    auto height = js::convert_from_js<int>(js::borrow(js, val));
     if (!height) return jsthrow(height.error());
     auto width = (*data)->texture.texture.width;
     (*data)->texture = rl::RenderTexture::load(width, *height);

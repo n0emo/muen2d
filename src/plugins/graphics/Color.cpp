@@ -15,7 +15,7 @@
 namespace glint::js {
 
 template<>
-auto try_into<Color>(const Value& val) noexcept -> JSResult<Color> {
+auto convert_from_js<Color>(const Value& val) noexcept -> JSResult<Color> {
     if (auto r = plugins::graphics::color::ColorClassData::from_value(val)) return (*r)->color;
 
     auto c = Color {};
@@ -207,7 +207,7 @@ static auto get_a(JSContext *js, JSValueConst this_val) -> JSValue {
 static auto set_r(JSContext *js, JSValueConst this_val, JSValueConst val) -> JSValue {
     auto data = ColorClassData::from_value(borrow(js, this_val));
     if (!data) return jsthrow(data.error());
-    const auto r = js::try_into<unsigned char>(js::Value::borrowed(js, val));
+    const auto r = js::convert_from_js<unsigned char>(js::Value::borrowed(js, val));
     if (!r) return jsthrow(r.error());
     (*data)->color.r = *r;
     return JS_UNDEFINED;
@@ -216,7 +216,7 @@ static auto set_r(JSContext *js, JSValueConst this_val, JSValueConst val) -> JSV
 static auto set_g(JSContext *js, JSValueConst this_val, JSValueConst val) -> JSValue {
     auto data = ColorClassData::from_value(borrow(js, this_val));
     if (!data) return jsthrow(data.error());
-    const auto g = js::try_into<unsigned char>(js::Value::borrowed(js, val));
+    const auto g = js::convert_from_js<unsigned char>(js::Value::borrowed(js, val));
     if (!g) return jsthrow(g.error());
     (*data)->color.g = *g;
     return JS_UNDEFINED;
@@ -225,7 +225,7 @@ static auto set_g(JSContext *js, JSValueConst this_val, JSValueConst val) -> JSV
 static auto set_b(JSContext *js, JSValueConst this_val, JSValueConst val) -> JSValue {
     auto data = ColorClassData::from_value(borrow(js, this_val));
     if (!data) return jsthrow(data.error());
-    const auto b = js::try_into<unsigned char>(js::Value::borrowed(js, val));
+    const auto b = js::convert_from_js<unsigned char>(js::Value::borrowed(js, val));
     if (!b) return jsthrow(b.error());
     (*data)->color.b = *b;
     return JS_UNDEFINED;
@@ -234,14 +234,14 @@ static auto set_b(JSContext *js, JSValueConst this_val, JSValueConst val) -> JSV
 static auto set_a(JSContext *js, JSValueConst this_val, JSValueConst val) -> JSValue {
     auto data = ColorClassData::from_value(borrow(js, this_val));
     if (!data) return jsthrow(data.error());
-    const auto a = js::try_into<unsigned char>(js::borrow(js, val));
+    const auto a = js::convert_from_js<unsigned char>(js::borrow(js, val));
     if (!a) return jsthrow(a.error());
     (*data)->color.a = *a;
     return JS_UNDEFINED;
 }
 
 static auto to_string(JSContext *js, JSValueConst this_val, int, JSValueConst *) -> JSValue {
-    auto col = js::try_into<Color>(js::borrow(js, this_val));
+    auto col = js::convert_from_js<Color>(js::borrow(js, this_val));
     if (!col) return jsthrow(col.error());
     const auto str = fmt::format("{}", *col);
     return JS_NewString(js, str.c_str());

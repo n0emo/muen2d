@@ -1,6 +1,5 @@
 #include <plugins/math.hpp>
 
-#include <cmath>
 #include <expected>
 #include <gsl/gsl>
 
@@ -13,7 +12,7 @@
 namespace glint::js {
 
 template<>
-auto try_into<Vector2 *>(const Value& val) noexcept -> JSResult<Vector2 *> {
+auto convert_from_js<Vector2 *>(const Value& val) noexcept -> JSResult<Vector2 *> {
     const auto id = class_id<&plugins::math::vector2::VECTOR2>(val.ctx());
     const auto ptr = static_cast<::Vector2 *>(JS_GetOpaque(val.cget(), id));
     if (ptr == nullptr) return Unexpected(JSError::type_error(val.ctx(), "Not an instance of Vector2"));
@@ -21,8 +20,8 @@ auto try_into<Vector2 *>(const Value& val) noexcept -> JSResult<Vector2 *> {
 }
 
 template<>
-auto try_into<Vector2>(const Value& val) noexcept -> JSResult<Vector2> {
-    if (auto r = try_into<Vector2 *>(val)) return **r;
+auto convert_from_js<Vector2>(const Value& val) noexcept -> JSResult<Vector2> {
+    if (auto r = convert_from_js<Vector2 *>(val)) return **r;
 
     auto vec = Vector2 {};
     auto obj = Object::from_value(val);
@@ -137,49 +136,49 @@ static auto one(JSContext *js, JSValueConst, int, JSValueConst *) -> JSValue {
 }
 
 static auto get_x(JSContext *js, JSValueConst this_val) -> JSValue {
-    auto v = try_into<Vector2 *>(js::borrow(js, this_val));
+    auto v = convert_from_js<Vector2 *>(js::borrow(js, this_val));
     if (!v) return jsthrow(v.error());
     return JS_NewFloat64(js, (*v)->x);
 }
 
 static auto get_y(JSContext *js, JSValueConst this_val) -> JSValue {
-    auto v = try_into<Vector2 *>(js::borrow(js, this_val));
+    auto v = convert_from_js<Vector2 *>(js::borrow(js, this_val));
     if (!v) return jsthrow(v.error());
     return JS_NewFloat64(js, (*v)->y);
 }
 
 static auto get_length(JSContext *js, JSValueConst this_val) -> JSValue {
-    auto v = try_into<Vector2 *>(js::borrow(js, this_val));
+    auto v = convert_from_js<Vector2 *>(js::borrow(js, this_val));
     if (!v) return jsthrow(v.error());
     return JS_NewFloat64(js, Vector2Length(**v));
 }
 
 static auto get_length_sqr(JSContext *js, JSValueConst this_val) -> JSValue {
-    auto v = try_into<Vector2 *>(js::borrow(js, this_val));
+    auto v = convert_from_js<Vector2 *>(js::borrow(js, this_val));
     if (!v) return jsthrow(v.error());
     return JS_NewFloat64(js, Vector2LengthSqr(**v));
 }
 
 static auto set_x(JSContext *js, JSValueConst this_val, JSValueConst val) -> JSValue {
-    auto vec = try_into<Vector2 *>(js::borrow(js, this_val));
+    auto vec = convert_from_js<Vector2 *>(js::borrow(js, this_val));
     if (!vec) return jsthrow(vec.error());
-    auto x = js::try_into<float>(js::borrow(js, val));
+    auto x = js::convert_from_js<float>(js::borrow(js, val));
     if (!x) return jsthrow(x.error());
     (*vec)->x = *x;
     return JS_UNDEFINED;
 }
 
 static auto set_y(JSContext *js, JSValueConst this_val, JSValueConst val) -> JSValue {
-    auto vec = try_into<Vector2 *>(js::borrow(js, this_val));
+    auto vec = convert_from_js<Vector2 *>(js::borrow(js, this_val));
     if (!vec) return jsthrow(vec.error());
-    auto y = js::try_into<float>(js::borrow(js, val));
+    auto y = js::convert_from_js<float>(js::borrow(js, val));
     if (!y) return jsthrow(y.error());
     (*vec)->y = *y;
     return JS_UNDEFINED;
 }
 
 static auto add(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {
-    auto this_vec = try_into<Vector2 *>(js::borrow(js, this_val));
+    auto this_vec = convert_from_js<Vector2 *>(js::borrow(js, this_val));
     if (!this_vec) return jsthrow(this_vec.error());
     auto vec2 = read_vector_from_args(js, argc, argv);
     if (!vec2) return jsthrow(vec2.error());
@@ -188,7 +187,7 @@ static auto add(JSContext *js, JSValueConst this_val, int argc, JSValueConst *ar
 }
 
 static auto add_num(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {
-    auto this_vec = try_into<Vector2 *>(js::borrow(js, this_val));
+    auto this_vec = convert_from_js<Vector2 *>(js::borrow(js, this_val));
     if (!this_vec) return jsthrow(this_vec.error());
     const auto args = js::unpack_args<float>(js, argc, argv);
     if (!args) return jsthrow(args.error());
@@ -199,7 +198,7 @@ static auto add_num(JSContext *js, JSValueConst this_val, int argc, JSValueConst
 }
 
 static auto sub(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {
-    auto this_vec = js::try_into<Vector2 *>(js::borrow(js, this_val));
+    auto this_vec = js::convert_from_js<Vector2 *>(js::borrow(js, this_val));
     if (!this_vec) return jsthrow(this_vec.error());
     auto vec2 = read_vector_from_args(js, argc, argv);
     if (!vec2) return jsthrow(vec2.error());
@@ -208,7 +207,7 @@ static auto sub(JSContext *js, JSValueConst this_val, int argc, JSValueConst *ar
 }
 
 static auto sub_num(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {
-    auto this_vec = js::try_into<Vector2 *>(js::borrow(js, this_val));
+    auto this_vec = js::convert_from_js<Vector2 *>(js::borrow(js, this_val));
     if (!this_vec) return jsthrow(this_vec.error());
     const auto args = js::unpack_args<float>(js, argc, argv);
     if (!args) return jsthrow(args.error());
@@ -219,7 +218,7 @@ static auto sub_num(JSContext *js, JSValueConst this_val, int argc, JSValueConst
 }
 
 static auto dot(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {
-    auto this_vec = js::try_into<Vector2 *>(js::borrow(js, this_val));
+    auto this_vec = js::convert_from_js<Vector2 *>(js::borrow(js, this_val));
     if (!this_vec) return jsthrow(this_vec.error());
     auto vec2 = read_vector_from_args(js, argc, argv);
     if (!vec2) return jsthrow(vec2.error());
@@ -227,7 +226,7 @@ static auto dot(JSContext *js, JSValueConst this_val, int argc, JSValueConst *ar
 }
 
 static auto distance(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {
-    auto this_vec = js::try_into<Vector2 *>(js::borrow(js, this_val));
+    auto this_vec = js::convert_from_js<Vector2 *>(js::borrow(js, this_val));
     if (!this_vec) return jsthrow(this_vec.error());
     auto vec2 = read_vector_from_args(js, argc, argv);
     if (!vec2) return jsthrow(vec2.error());
@@ -235,7 +234,7 @@ static auto distance(JSContext *js, JSValueConst this_val, int argc, JSValueCons
 }
 
 static auto distance_sqr(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {
-    auto this_vec = js::try_into<Vector2 *>(js::borrow(js, this_val));
+    auto this_vec = js::convert_from_js<Vector2 *>(js::borrow(js, this_val));
     if (!this_vec) return jsthrow(this_vec.error());
     auto vec2 = read_vector_from_args(js, argc, argv);
     if (!vec2) return jsthrow(vec2.error());
@@ -243,7 +242,7 @@ static auto distance_sqr(JSContext *js, JSValueConst this_val, int argc, JSValue
 }
 
 static auto angle(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {
-    auto this_vec = js::try_into<Vector2 *>(js::borrow(js, this_val));
+    auto this_vec = js::convert_from_js<Vector2 *>(js::borrow(js, this_val));
     if (!this_vec) return jsthrow(this_vec.error());
     auto vec2 = read_vector_from_args(js, argc, argv);
     if (!vec2) return jsthrow(vec2.error());
@@ -251,7 +250,7 @@ static auto angle(JSContext *js, JSValueConst this_val, int argc, JSValueConst *
 }
 
 static auto line_angle(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {
-    auto start = js::try_into<Vector2 *>(js::borrow(js, this_val));
+    auto start = js::convert_from_js<Vector2 *>(js::borrow(js, this_val));
     if (!start) return jsthrow(start.error());
     auto end = read_vector_from_args(js, argc, argv);
     if (!end) return jsthrow(end.error());
@@ -259,7 +258,7 @@ static auto line_angle(JSContext *js, JSValueConst this_val, int argc, JSValueCo
 }
 
 static auto scale(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {
-    auto this_vec = js::try_into<Vector2 *>(js::borrow(js, this_val));
+    auto this_vec = js::convert_from_js<Vector2 *>(js::borrow(js, this_val));
     if (!this_vec) return jsthrow(this_vec.error());
     const auto args = js::unpack_args<float>(js, argc, argv);
     if (!args) return jsthrow(args.error());
@@ -269,7 +268,7 @@ static auto scale(JSContext *js, JSValueConst this_val, int argc, JSValueConst *
 }
 
 static auto mul(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {
-    auto this_vec = js::try_into<Vector2 *>(js::borrow(js, this_val));
+    auto this_vec = js::convert_from_js<Vector2 *>(js::borrow(js, this_val));
     if (!this_vec) return jsthrow(this_vec.error());
     auto vec2 = read_vector_from_args(js, argc, argv);
     if (!vec2) return jsthrow(vec2.error());
@@ -278,14 +277,14 @@ static auto mul(JSContext *js, JSValueConst this_val, int argc, JSValueConst *ar
 }
 
 static auto negate(JSContext *js, JSValueConst this_val, int, JSValueConst *) -> JSValue {
-    auto this_vec = js::try_into<Vector2 *>(js::borrow(js, this_val));
+    auto this_vec = js::convert_from_js<Vector2 *>(js::borrow(js, this_val));
     if (!this_vec) return jsthrow(this_vec.error());
     **this_vec = Vector2Negate(**this_vec);
     return JS_DupValue(js, this_val);
 }
 
 static auto div(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {
-    auto this_vec = js::try_into<Vector2 *>(js::borrow(js, this_val));
+    auto this_vec = js::convert_from_js<Vector2 *>(js::borrow(js, this_val));
     if (!this_vec) return jsthrow(this_vec.error());
     auto vec2 = read_vector_from_args(js, argc, argv);
     if (!vec2) return jsthrow(vec2.error());
@@ -294,14 +293,14 @@ static auto div(JSContext *js, JSValueConst this_val, int argc, JSValueConst *ar
 }
 
 static auto norm(JSContext *js, JSValueConst this_val, int, JSValueConst *) -> JSValue {
-    auto this_vec = js::try_into<Vector2 *>(js::borrow(js, this_val));
+    auto this_vec = js::convert_from_js<Vector2 *>(js::borrow(js, this_val));
     if (!this_vec) return jsthrow(this_vec.error());
     **this_vec = Vector2Normalize(**this_vec);
     return JS_DupValue(js, this_val);
 }
 
 static auto lerp(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {
-    auto this_vec = js::try_into<Vector2 *>(js::borrow(js, this_val));
+    auto this_vec = js::convert_from_js<Vector2 *>(js::borrow(js, this_val));
     if (!this_vec) return jsthrow(this_vec.error());
     auto args = read_vector_and_number_from_args(js, argc, argv);
     if (!args) return jsthrow(this_vec.error());
@@ -311,7 +310,7 @@ static auto lerp(JSContext *js, JSValueConst this_val, int argc, JSValueConst *a
 }
 
 static auto reflect(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {
-    auto this_vec = js::try_into<Vector2 *>(js::borrow(js, this_val));
+    auto this_vec = js::convert_from_js<Vector2 *>(js::borrow(js, this_val));
     if (!this_vec) return jsthrow(this_vec.error());
     auto vec2 = read_vector_from_args(js, argc, argv);
     if (!vec2) return jsthrow(vec2.error());
@@ -320,7 +319,7 @@ static auto reflect(JSContext *js, JSValueConst this_val, int argc, JSValueConst
 }
 
 static auto min(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {
-    auto this_vec = js::try_into<Vector2 *>(js::borrow(js, this_val));
+    auto this_vec = js::convert_from_js<Vector2 *>(js::borrow(js, this_val));
     if (!this_vec) return jsthrow(this_vec.error());
     auto vec2 = read_vector_from_args(js, argc, argv);
     if (!vec2) return jsthrow(vec2.error());
@@ -329,7 +328,7 @@ static auto min(JSContext *js, JSValueConst this_val, int argc, JSValueConst *ar
 }
 
 static auto max(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {
-    auto this_vec = js::try_into<Vector2 *>(js::borrow(js, this_val));
+    auto this_vec = js::convert_from_js<Vector2 *>(js::borrow(js, this_val));
     if (!this_vec) return jsthrow(this_vec.error());
     auto vec2 = read_vector_from_args(js, argc, argv);
     if (!vec2) return jsthrow(vec2.error());
@@ -338,7 +337,7 @@ static auto max(JSContext *js, JSValueConst this_val, int argc, JSValueConst *ar
 }
 
 static auto rotate(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {
-    auto this_vec = js::try_into<Vector2 *>(js::borrow(js, this_val));
+    auto this_vec = js::convert_from_js<Vector2 *>(js::borrow(js, this_val));
     if (!this_vec) return jsthrow(this_vec.error());
     const auto args = js::unpack_args<float>(js, argc, argv);
     if (!args) return jsthrow(args.error());
@@ -348,7 +347,7 @@ static auto rotate(JSContext *js, JSValueConst this_val, int argc, JSValueConst 
 }
 
 static auto move_towards(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {
-    auto this_vec = js::try_into<Vector2 *>(js::borrow(js, this_val));
+    auto this_vec = js::convert_from_js<Vector2 *>(js::borrow(js, this_val));
     if (!this_vec) return jsthrow(this_vec.error());
     auto args = read_vector_and_number_from_args(js, argc, argv);
     if (!args) return jsthrow(this_vec.error());
@@ -358,14 +357,14 @@ static auto move_towards(JSContext *js, JSValueConst this_val, int argc, JSValue
 }
 
 static auto invert(JSContext *js, JSValueConst this_val, int, JSValueConst *) -> JSValue {
-    auto this_vec = js::try_into<Vector2 *>(js::borrow(js, this_val));
+    auto this_vec = js::convert_from_js<Vector2 *>(js::borrow(js, this_val));
     if (!this_vec) return jsthrow(this_vec.error());
     **this_vec = Vector2Invert(**this_vec);
     return JS_DupValue(js, this_val);
 }
 
 static auto clamp(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {
-    auto this_vec = js::try_into<Vector2 *>(js::borrow(js, this_val));
+    auto this_vec = js::convert_from_js<Vector2 *>(js::borrow(js, this_val));
     if (!this_vec) return jsthrow(this_vec.error());
     auto args = read_two_vectors_from_args(js, argc, argv);
     if (!args) return jsthrow(args.error());
@@ -375,7 +374,7 @@ static auto clamp(JSContext *js, JSValueConst this_val, int argc, JSValueConst *
 }
 
 static auto clamp_value(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {
-    auto this_vec = js::try_into<Vector2 *>(js::borrow(js, this_val));
+    auto this_vec = js::convert_from_js<Vector2 *>(js::borrow(js, this_val));
     if (!this_vec) return jsthrow(this_vec.error());
     auto args = js::unpack_args<float, float>(js, argc, argv);
     if (!args) return jsthrow(args.error());
@@ -385,7 +384,7 @@ static auto clamp_value(JSContext *js, JSValueConst this_val, int argc, JSValueC
 }
 
 static auto equals(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {
-    auto this_vec = js::try_into<Vector2 *>(js::borrow(js, this_val));
+    auto this_vec = js::convert_from_js<Vector2 *>(js::borrow(js, this_val));
     if (!this_vec) return jsthrow(this_vec.error());
     auto vec2 = read_vector_from_args(js, argc, argv);
     if (!vec2) return jsthrow(vec2.error());
@@ -394,7 +393,7 @@ static auto equals(JSContext *js, JSValueConst this_val, int argc, JSValueConst 
 }
 
 static auto refract(JSContext *js, JSValueConst this_val, int argc, JSValueConst *argv) -> JSValue {
-    auto this_vec = js::try_into<Vector2 *>(js::borrow(js, this_val));
+    auto this_vec = js::convert_from_js<Vector2 *>(js::borrow(js, this_val));
     if (!this_vec) return jsthrow(this_vec.error());
     auto args = read_vector_and_number_from_args(js, argc, argv);
     if (!args) return jsthrow(args.error());
@@ -404,7 +403,7 @@ static auto refract(JSContext *js, JSValueConst this_val, int argc, JSValueConst
 }
 
 static auto clone(JSContext *js, JSValueConst this_val, int, JSValueConst *) -> JSValue {
-    auto this_vec = js::try_into<Vector2 *>(js::borrow(js, this_val));
+    auto this_vec = js::convert_from_js<Vector2 *>(js::borrow(js, this_val));
     if (!this_vec) return jsthrow(this_vec.error());
 
     auto obj = JS_NewObjectClass(js, js::class_id<&VECTOR2>(js));
@@ -419,7 +418,7 @@ static auto clone(JSContext *js, JSValueConst this_val, int, JSValueConst *) -> 
 }
 
 static auto object_to_string(JSContext *js, JSValueConst this_val, int, JSValueConst *) -> JSValue {
-    auto vec = js::try_into<Vector2>(js::borrow(js, this_val));
+    auto vec = js::convert_from_js<Vector2>(js::borrow(js, this_val));
     if (!vec) return jsthrow(vec.error());
     auto str = fmt::format("{}", *vec);
     return JS_NewStringLen(js, str.c_str(), str.size());

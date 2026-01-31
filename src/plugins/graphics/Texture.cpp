@@ -22,7 +22,7 @@ using glint::plugins::graphics::texture::TextureClassData;
 using plugins::graphics::texture::TextureOptions;
 
 template<>
-auto try_into<const rl::Texture *>(const Value& val) noexcept -> JSResult<const rl::Texture *> {
+auto convert_from_js<const rl::Texture *>(const Value& val) noexcept -> JSResult<const rl::Texture *> {
     const auto data = static_cast<TextureClassData *>(JS_GetOpaque(val.cget(), class_id<&TEXTURE>(val.ctx())));
     if (data == nullptr) return Unexpected(JSError::type_error(val.ctx(), "Expected Texture object"));
 
@@ -32,7 +32,7 @@ auto try_into<const rl::Texture *>(const Value& val) noexcept -> JSResult<const 
 }
 
 template<>
-auto try_into<TextureOptions>(const Value& val) noexcept -> JSResult<TextureOptions> try {
+auto convert_from_js<TextureOptions>(const Value& val) noexcept -> JSResult<TextureOptions> try {
     auto o = TextureOptions {};
     auto obj = Object::from_value(val);
     if (!obj) return Unexpected(obj.error());
@@ -188,22 +188,19 @@ static auto unload(JSContext *js, JSValueConst this_val, int argc, JSValueConst 
 }
 
 static auto get_source(JSContext *js, JSValueConst this_val) -> JSValue {
-    const auto tex = js::try_into<const rl::Texture *>(js::borrow(js, this_val));
+    const auto tex = js::convert_from_js<const rl::Texture *>(js::borrow(js, this_val));
     if (!tex) return jsthrow(tex.error());
-
-    const auto obj = JS_NewObjectClass(js, js::class_id<&math::rectangle::RECTANGLE>(js));
-    const auto rec = owner<Rectangle *> {new (std::nothrow) Rectangle {
-        .x = 0.0f,
-        .y = 0.0f,
-        .width = static_cast<float>((*tex)->width),
-        .height = static_cast<float>((*tex)->height),
-    }};
-    JS_SetOpaque(obj, rec);
-    return obj;
+    return math::JSRectangle::create_instance(
+        js,
+        0.0f,
+        0.0f,
+        static_cast<float>((*tex)->width),
+        static_cast<float>((*tex)->height)
+    );
 }
 
 static auto to_string(JSContext *js, JSValueConst this_val, int, JSValueConst *) -> JSValue {
-    const auto tex = js::try_into<const rl::Texture *>(js::borrow(js, this_val));
+    const auto tex = js::convert_from_js<const rl::Texture *>(js::borrow(js, this_val));
     if (!tex) return jsthrow(tex.error());
     const auto str = fmt::format("{}", **tex);
     return JS_NewString(js, str.c_str());

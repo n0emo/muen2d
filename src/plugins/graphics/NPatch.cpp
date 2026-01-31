@@ -12,7 +12,7 @@
 namespace glint::js {
 
 template<>
-auto try_into<NPatchInfo>(const Value& val) noexcept -> JSResult<NPatchInfo> {
+auto convert_from_js<NPatchInfo>(const Value& val) noexcept -> JSResult<NPatchInfo> {
     if (auto r = plugins::graphics::npatch::NPatchClassData::from_value(val)) return (*r)->npatch;
 
     auto np = NPatchInfo {};
@@ -138,16 +138,13 @@ static auto get_source(JSContext *js, JSValueConst this_val) -> JSValue {
     auto data = NPatchClassData::from_value(borrow(js, this_val));
     if (!data) return jsthrow(data.error());
     const auto npatch = (*data)->npatch;
-
-    auto obj = JS_NewObjectClass(js, js::class_id<&math::rectangle::RECTANGLE>(js));
-    auto rec = owner<Rectangle *>(new Rectangle {
-        .x = npatch.source.x,
-        .y = npatch.source.y,
-        .width = npatch.source.width,
-        .height = npatch.source.height,
-    });
-    JS_SetOpaque(obj, rec);
-    return obj;
+    return math::JSRectangle::create_instance(
+        js,
+        npatch.source.x,
+        npatch.source.y,
+        npatch.source.width,
+        npatch.source.height
+    );
 }
 
 static auto get_left(JSContext *js, JSValueConst this_val) -> JSValue {
@@ -183,7 +180,7 @@ static auto get_layout(JSContext *js, JSValueConst this_val) -> JSValue {
 static auto set_source(JSContext *js, JSValueConst this_val, JSValueConst val) -> JSValue {
     auto data = NPatchClassData::from_value(borrow(js, this_val));
     if (!data) return jsthrow(data.error());
-    const auto source = js::try_into<Rectangle>(js::borrow(js, val));
+    const auto source = js::convert_from_js<Rectangle>(js::borrow(js, val));
     if (!source) return jsthrow(source.error());
     (*data)->npatch.source = *source;
     return JS_UNDEFINED;
@@ -192,7 +189,7 @@ static auto set_source(JSContext *js, JSValueConst this_val, JSValueConst val) -
 static auto set_left(JSContext *js, JSValueConst this_val, JSValueConst val) -> JSValue {
     auto data = NPatchClassData::from_value(borrow(js, this_val));
     if (!data) return jsthrow(data.error());
-    const auto left = js::try_into<int>(js::borrow(js, val));
+    const auto left = js::convert_from_js<int>(js::borrow(js, val));
     if (!left) return jsthrow(left.error());
     (*data)->npatch.left = *left;
     return JS_UNDEFINED;
@@ -201,7 +198,7 @@ static auto set_left(JSContext *js, JSValueConst this_val, JSValueConst val) -> 
 static auto set_top(JSContext *js, JSValueConst this_val, JSValueConst val) -> JSValue {
     auto data = NPatchClassData::from_value(borrow(js, this_val));
     if (!data) return jsthrow(data.error());
-    const auto top = js::try_into<int>(js::borrow(js, val));
+    const auto top = js::convert_from_js<int>(js::borrow(js, val));
     if (!top) return jsthrow(top.error());
     (*data)->npatch.top = *top;
     return JS_UNDEFINED;
@@ -210,7 +207,7 @@ static auto set_top(JSContext *js, JSValueConst this_val, JSValueConst val) -> J
 static auto set_right(JSContext *js, JSValueConst this_val, JSValueConst val) -> JSValue {
     auto data = NPatchClassData::from_value(borrow(js, this_val));
     if (!data) return jsthrow(data.error());
-    const auto right = js::try_into<int>(js::borrow(js, val));
+    const auto right = js::convert_from_js<int>(js::borrow(js, val));
     if (!right) return jsthrow(right.error());
     (*data)->npatch.right = *right;
     return JS_UNDEFINED;
@@ -219,7 +216,7 @@ static auto set_right(JSContext *js, JSValueConst this_val, JSValueConst val) ->
 static auto set_bottom(JSContext *js, JSValueConst this_val, JSValueConst val) -> JSValue {
     auto data = NPatchClassData::from_value(borrow(js, this_val));
     if (!data) return jsthrow(data.error());
-    const auto bottom = js::try_into<int>(js::borrow(js, val));
+    const auto bottom = js::convert_from_js<int>(js::borrow(js, val));
     if (!bottom) return jsthrow(bottom.error());
     (*data)->npatch.bottom = *bottom;
     return JS_UNDEFINED;
@@ -228,14 +225,14 @@ static auto set_bottom(JSContext *js, JSValueConst this_val, JSValueConst val) -
 static auto set_layout(JSContext *js, JSValueConst this_val, JSValueConst val) -> JSValue {
     auto data = NPatchClassData::from_value(borrow(js, this_val));
     if (!data) return jsthrow(data.error());
-    const auto layout = js::try_into<int>(js::borrow(js, val));
+    const auto layout = js::convert_from_js<int>(js::borrow(js, val));
     if (!layout) return jsthrow(layout.error());
     (*data)->npatch.layout = *layout;
     return JS_UNDEFINED;
 }
 
 static auto to_string(JSContext *js, JSValue this_val, int, JSValue *) -> JSValue {
-    auto npatch = js::try_into<NPatchInfo>(js::borrow(js, this_val));
+    auto npatch = js::convert_from_js<NPatchInfo>(js::borrow(js, this_val));
     if (!npatch) return jsthrow(npatch.error());
     const auto str = fmt::format("{}", *npatch);
     return JS_NewStringLen(js, str.c_str(), str.size());

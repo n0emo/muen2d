@@ -131,8 +131,8 @@ static const auto KEY_MAP = std::unordered_map<std::string, KeyboardKey> {
 };
 
 template<>
-auto try_into<KeyboardKey>(const Value& val) noexcept -> JSResult<KeyboardKey> {
-    auto str = try_into<std::string>(val);
+auto convert_from_js<KeyboardKey>(const Value& val) noexcept -> JSResult<KeyboardKey> {
+    auto str = convert_from_js<std::string>(val);
     if (!str) return Unexpected(str.error());
     if (auto it = KEY_MAP.find(*str); it != KEY_MAP.end()) {
         return it->second;

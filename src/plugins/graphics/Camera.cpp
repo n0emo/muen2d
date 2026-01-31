@@ -15,7 +15,7 @@
 namespace glint::js {
 
 template<>
-auto try_into<Camera2D>(const Value& val) noexcept -> JSResult<Camera2D> {
+auto convert_from_js<Camera2D>(const Value& val) noexcept -> JSResult<Camera2D> {
     if (auto r = plugins::graphics::camera::CameraClassData::from_value(val)) return (*r)->camera;
 
     auto cam = Camera2D {};
@@ -177,7 +177,7 @@ static auto get_zoom(JSContext *js, JSValueConst this_val) -> JSValue {
 }
 
 static auto set_offset(JSContext *js, JSValueConst this_val, JSValueConst val) -> JSValue {
-    const auto offset = js::try_into<Vector2>(js::Value::borrowed(js, val));
+    const auto offset = js::convert_from_js<Vector2>(js::Value::borrowed(js, val));
     if (!offset) return jsthrow(offset.error());
     auto cam = pointer_from_value(js, this_val);
     cam->offset = *offset;
@@ -185,7 +185,7 @@ static auto set_offset(JSContext *js, JSValueConst this_val, JSValueConst val) -
 }
 
 static auto set_target(JSContext *js, JSValueConst this_val, JSValueConst val) -> JSValue {
-    const auto target = js::try_into<Vector2>(js::Value::borrowed(js, val));
+    const auto target = js::convert_from_js<Vector2>(js::Value::borrowed(js, val));
     if (!target) return jsthrow(target.error());
     auto cam = pointer_from_value(js, this_val);
     cam->target = *target;
@@ -193,7 +193,7 @@ static auto set_target(JSContext *js, JSValueConst this_val, JSValueConst val) -
 }
 
 static auto set_rotation(JSContext *js, JSValueConst this_val, JSValueConst val) -> JSValue {
-    const auto rotation = js::try_into<float>(js::Value::borrowed(js, val));
+    const auto rotation = js::convert_from_js<float>(js::Value::borrowed(js, val));
     if (!rotation) return jsthrow(rotation.error());
     auto cam = pointer_from_value(js, this_val);
     cam->rotation = *rotation;
@@ -201,7 +201,7 @@ static auto set_rotation(JSContext *js, JSValueConst this_val, JSValueConst val)
 }
 
 static auto set_zoom(JSContext *js, JSValueConst this_val, ::JSValueConst val) -> ::JSValue {
-    const auto zoom = js::try_into<float>(js::Value::borrowed(js, val));
+    const auto zoom = js::convert_from_js<float>(js::Value::borrowed(js, val));
     if (!zoom) return jsthrow(zoom.error());
     auto cam = pointer_from_value(js, this_val);
     cam->zoom = *zoom;

@@ -125,9 +125,7 @@ constexpr inline auto display_music_type(int t) noexcept -> czstring {
 
 class Image: public ::Image {
   public:
-    static auto load(czstring file_name) noexcept -> Image {
-        return {::LoadImage(file_name)};
-    }
+    static auto load(czstring file_name) noexcept -> Image { return {::LoadImage(file_name)}; }
 
     static auto load_raw(czstring file_name, int width, int height, int format, int header_size) noexcept -> Image {
         return {::LoadImageRaw(file_name, width, height, format, header_size)};
@@ -145,21 +143,15 @@ class Image: public ::Image {
         return {::LoadImageFromMemory(file_type, data.data(), int(data.size()))};
     }
 
-    static auto load_from_texture(::Texture texture) -> Image {
-        return {::LoadImageFromTexture(texture)};
-    }
+    static auto load_from_texture(::Texture texture) -> Image { return {::LoadImageFromTexture(texture)}; }
 
-    static auto load_from_screen() -> Image {
-        return {::LoadImageFromScreen()};
-    }
+    static auto load_from_screen() -> Image { return {::LoadImageFromScreen()}; }
 
     Image() noexcept : ::Image {} {}
 
     Image(const Image&) = delete;
 
-    Image(Image&& other) noexcept : ::Image {other} {
-        other.reset();
-    };
+    Image(Image&& other) noexcept : ::Image {other} { other.reset(); };
 
     auto operator=(const Image&) -> Image& = delete;
 
@@ -168,9 +160,7 @@ class Image: public ::Image {
         return *this;
     }
 
-    ~Image() noexcept {
-        ::UnloadImage(*this);
-    }
+    ~Image() noexcept { ::UnloadImage(*this); }
 
     friend inline auto swap(Image& a, Image& b) noexcept -> void;
 
@@ -188,13 +178,9 @@ class Image: public ::Image {
 
 class Texture: public ::Texture {
   public:
-    static auto load(czstring file_name) noexcept -> Texture {
-        return {::LoadTexture(file_name)};
-    }
+    static auto load(czstring file_name) noexcept -> Texture { return {::LoadTexture(file_name)}; }
 
-    static auto load_from_image(::Image image) noexcept -> Texture {
-        return {::LoadTextureFromImage(image)};
-    }
+    static auto load_from_image(::Image image) noexcept -> Texture { return {::LoadTextureFromImage(image)}; }
 
     static auto load_from_memory(czstring extension, std::span<unsigned char> data) noexcept -> Texture {
         const auto image = ::LoadImageFromMemory(extension, data.data(), int(data.size()));
@@ -206,9 +192,7 @@ class Texture: public ::Texture {
 
     Texture() noexcept : ::Texture {} {}
 
-    Texture(Texture&& other) noexcept : ::Texture {other} {
-        other.reset();
-    }
+    Texture(Texture&& other) noexcept : ::Texture {other} { other.reset(); }
 
     auto operator=(Texture&& other) noexcept -> Texture& {
         swap(*this, other);
@@ -219,9 +203,7 @@ class Texture: public ::Texture {
 
     auto operator=(const Texture&) -> Texture& = delete;
 
-    ~Texture() noexcept {
-        ::UnloadTexture(*this);
-    }
+    ~Texture() noexcept { ::UnloadTexture(*this); }
 
     friend inline auto swap(Texture& a, Texture& b) noexcept -> void;
 
@@ -239,17 +221,13 @@ class Texture: public ::Texture {
 
 class RenderTexture: public ::RenderTexture {
   public:
-    static auto load(int width, int height) noexcept -> RenderTexture {
-        return {::LoadRenderTexture(width, height)};
-    }
+    static auto load(int width, int height) noexcept -> RenderTexture { return {::LoadRenderTexture(width, height)}; }
 
     RenderTexture() noexcept : ::RenderTexture {} {};
 
     RenderTexture(const RenderTexture&) = delete;
 
-    RenderTexture(RenderTexture&& other) noexcept : ::RenderTexture {other} {
-        other.reset();
-    };
+    RenderTexture(RenderTexture&& other) noexcept : ::RenderTexture {other} { other.reset(); };
 
     auto operator=(const RenderTexture&) -> RenderTexture& = delete;
 
@@ -258,9 +236,7 @@ class RenderTexture: public ::RenderTexture {
         return *this;
     };
 
-    ~RenderTexture() noexcept {
-        ::UnloadRenderTexture(*this);
-    }
+    ~RenderTexture() noexcept { ::UnloadRenderTexture(*this); }
 
     friend inline auto swap(RenderTexture& a, RenderTexture& b) noexcept -> void;
 
@@ -276,9 +252,7 @@ class RenderTexture: public ::RenderTexture {
 
 class Font: public ::Font {
   public:
-    static auto load(czstring file_name) noexcept -> Font {
-        return {::LoadFont(file_name)};
-    }
+    static auto load(czstring file_name) noexcept -> Font { return {::LoadFont(file_name)}; }
 
     static auto load_ex(czstring file_name, int font_size, std::optional<std::span<int>> codepoints) noexcept -> Font {
         if (codepoints) return {::LoadFontEx(file_name, font_size, codepoints->data(), int(codepoints->size()))};
@@ -313,9 +287,7 @@ class Font: public ::Font {
 
     Font(const Font&) = delete;
 
-    Font(Font&& other) noexcept : ::Font {other} {
-        other.reset();
-    }
+    Font(Font&& other) noexcept : ::Font {other} { other.reset(); }
 
     auto operator=(const Font&) -> Font& = delete;
 
@@ -324,9 +296,7 @@ class Font: public ::Font {
         return *this;
     }
 
-    ~Font() noexcept {
-        ::UnloadFont(*this);
-    }
+    ~Font() noexcept { ::UnloadFont(*this); }
 
     friend inline auto swap(Font& a, Font& b) noexcept -> void;
 
@@ -345,9 +315,7 @@ class Font: public ::Font {
 
 class Wave: public ::Wave {
   public:
-    static auto load(czstring file_name) noexcept -> Wave {
-        return {::LoadWave(file_name)};
-    }
+    static auto load(czstring file_name) noexcept -> Wave { return {::LoadWave(file_name)}; }
 
     static auto load_from_memory(czstring file_type, std::span<unsigned char> data) noexcept -> Wave {
         return {::LoadWaveFromMemory(file_type, data.data(), int(data.size()))};
@@ -357,9 +325,7 @@ class Wave: public ::Wave {
 
     Wave(const Wave&) = delete;
 
-    Wave(Wave&& other) noexcept : ::Wave {other} {
-        other.reset();
-    }
+    Wave(Wave&& other) noexcept : ::Wave {other} { other.reset(); }
 
     auto operator=(const Wave&) -> Wave& = delete;
 
@@ -368,9 +334,7 @@ class Wave: public ::Wave {
         return *this;
     };
 
-    ~Wave() noexcept {
-        UnloadWave(*this);
-    }
+    ~Wave() noexcept { UnloadWave(*this); }
 
     friend inline auto swap(Wave& a, Wave& b) noexcept -> void;
 
@@ -388,21 +352,15 @@ class Wave: public ::Wave {
 
 class Sound: public ::Sound {
   public:
-    static auto load(czstring file_name) noexcept -> Sound {
-        return {::LoadSound(file_name)};
-    }
+    static auto load(czstring file_name) noexcept -> Sound { return {::LoadSound(file_name)}; }
 
-    static auto load_from_wave(::Wave wave) noexcept -> Sound {
-        return {::LoadSoundFromWave(wave)};
-    }
+    static auto load_from_wave(::Wave wave) noexcept -> Sound { return {::LoadSoundFromWave(wave)}; }
 
     Sound() noexcept : ::Sound {} {}
 
     Sound(const Sound&) = delete;
 
-    Sound(Sound&& other) noexcept : ::Sound {other} {
-        other.reset();
-    }
+    Sound(Sound&& other) noexcept : ::Sound {other} { other.reset(); }
 
     auto operator=(const Sound&) -> Sound& = delete;
 
@@ -411,9 +369,7 @@ class Sound: public ::Sound {
         return *this;
     }
 
-    ~Sound() noexcept {
-        ::UnloadSound(*this);
-    }
+    ~Sound() noexcept { ::UnloadSound(*this); }
 
     friend inline auto swap(Sound& a, Sound& b) noexcept -> void;
 
@@ -428,9 +384,7 @@ class Sound: public ::Sound {
 
 class Music: public ::Music {
   public:
-    static auto load(czstring file_name) noexcept -> Music {
-        return {::LoadMusicStream(file_name)};
-    }
+    static auto load(czstring file_name) noexcept -> Music { return {::LoadMusicStream(file_name)}; }
 
     static auto load_from_memory(czstring file_type, std::span<unsigned char> data) noexcept -> Music {
         return {::LoadMusicStreamFromMemory(file_type, data.data(), int(data.size()))};
@@ -440,9 +394,7 @@ class Music: public ::Music {
 
     Music(const Music&) = delete;
 
-    Music(Music&& other) noexcept : ::Music {other} {
-        other.reset();
-    }
+    Music(Music&& other) noexcept : ::Music {other} { other.reset(); }
 
     auto operator=(const Music&) -> Music& = delete;
 
@@ -451,9 +403,7 @@ class Music: public ::Music {
         return *this;
     };
 
-    ~Music() noexcept {
-        UnloadMusicStream(*this);
-    }
+    ~Music() noexcept { UnloadMusicStream(*this); }
 
     friend inline auto swap(Music& a, Music& b) noexcept -> void;
 

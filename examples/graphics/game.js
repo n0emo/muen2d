@@ -11,6 +11,8 @@ export const config = {
 
 const bgColor = { r: 100, g: 100, b: 100, a: 255 };
 
+console.log(Rectangle.zero());
+
 export function draw() {
     graphics.clear(bgColor);
     graphics.rectangle(50, 100, 30, 30, Color.fromHex("#c49bffff"));

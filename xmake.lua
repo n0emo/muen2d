@@ -1,6 +1,7 @@
 add_rules("mode.debug", "mode.release")
 add_rules("plugin.compile_commands.autoupdate", { outputdir = "build" })
 
+add_requires("boost 1.90.0")
 add_requires("fmt", { configs = { header_only = false } })
 add_requires("libzip v1.11.4")
 add_requires("microsoft-gsl v4.2.1")
@@ -21,14 +22,13 @@ target("glint", function()
 		"src/engine.cpp",
 		"src/error.cpp",
 		"src/file_store.cpp",
-		"src/quickjs.cpp",
 		"src/main.cpp",
 		"src/plugins/*.cpp"
 	)
 	add_files("src/**.js")
 	add_includedirs("src", { public = true })
 	add_headerfiles("src/(**.hpp)")
-	add_packages({ "quickjs", "fmt", "libzip", "spdlog", "raylib", "microsoft-gsl" })
+	add_packages({ "quickjs", "fmt", "libzip", "spdlog", "raylib", "microsoft-gsl", "boost", })
 	add_defines("SPDLOG_COMPILED_LIB")
 	add_defines("SPDLOG_ACTIVE_LEVEL=SPDLOG_LEVEL_TRACE")
 	add_rules("utils.bin2c", { extensions = ".js" })
